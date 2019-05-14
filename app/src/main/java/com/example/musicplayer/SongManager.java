@@ -17,12 +17,12 @@ import java.util.ArrayList;
  * Created by MAHIPAL-PC on 10-12-2017.
  */
 
-public class SongManager {
+class SongManager {
 
     private Bitmap bitmap;
 
 
-    public ArrayList<Song> getMp3Songs(Context context) {
+    ArrayList<Song> getMp3Songs(Context context) {
 
         ArrayList<Song> arrayList = new ArrayList<>();
 
