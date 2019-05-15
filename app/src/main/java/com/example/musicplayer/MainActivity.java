@@ -6,17 +6,15 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.PlaybackParams;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -37,16 +35,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
 
     private RecyclerView mRecyclerViewSongs;
-    private AdapterSongs mAdapterSongs;
     private ArrayList<Song> mArrSongs;
     private SlidingUpPanelLayout mSlidingUpLayout;
-    private Song song;
     private RelativeLayout mRelative;
-    private SongManager songManager;
     private MediaPlayer mMediaPlayer;
-    private Utilities mUtilities;
     private Handler mHandler;
-    private Toolbar mToolBar;
 
     //On slidingLayout
     private ImageView mImgPlayingSong;
@@ -64,15 +57,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isRepeat = false;
 
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+//        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        mToolBar = findViewById(R.id.toolbar);
+        Toolbar mToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolBar);
 
         initRecyclerView();
@@ -83,9 +75,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mRelative = findViewById(R.id.relative);
 
         mHandler = new Handler();
-        mUtilities = new Utilities();
         mMediaPlayer = new MediaPlayer();
-        songManager = new SongManager();
+        SongManager songManager = new SongManager();
 
         mSeekBarPlaySong.setOnSeekBarChangeListener(this);
         mMediaPlayer.setOnCompletionListener(this);
@@ -93,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mArrSongs = new ArrayList<>();
         mArrSongs = songManager.getMp3Songs(MainActivity.this);
 
-        mAdapterSongs = new AdapterSongs(mArrSongs);
+        AdapterSongs mAdapterSongs = new AdapterSongs(mArrSongs);
         mAdapterSongs.setOnSongClickListener(new MySongClickListener());
         mRecyclerViewSongs.setAdapter(mAdapterSongs);
         mAdapterSongs.notifyDataSetChanged();
@@ -128,7 +119,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initRecyclerView() {
         mRecyclerViewSongs = findViewById(R.id.recyclerViewSongList);
-        mRecyclerViewSongs.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mRecyclerViewSongs.setLayoutManager(new LinearLayoutManager(
+                this, LinearLayoutManager.VERTICAL, false));
     }
 
     private void getId() {
@@ -289,12 +281,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             long currentDuration = mMediaPlayer.getCurrentPosition();
 
             // Displaying Total Duration time
-            mTxtSongPlayTime.setText("" + mUtilities.milliSecondsToTimer(totalDuration));
+            mTxtSongPlayTime.setText("" + Utilities.milliSecondsToTimer(totalDuration));
             // Displaying time completed playing
-            mTxtSongPlayCurrDuration.setText("" + mUtilities.milliSecondsToTimer(currentDuration));
+            mTxtSongPlayCurrDuration.setText("" + Utilities.milliSecondsToTimer(currentDuration));
 
             // Updating progress bar
-            int progress = (mUtilities.getProgressPercentage(currentDuration, totalDuration));
+            int progress = (Utilities.getProgressPercentage(currentDuration, totalDuration));
             //Log.d("Progress", ""+progress);
             mSeekBarPlaySong.setProgress(progress);
 
@@ -318,7 +310,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mHandler.removeCallbacks(mUpdateTimeTask);
         int totalDuration = mMediaPlayer.getDuration();
-        int currentPosition = mUtilities.progressToTimer(seekBar.getProgress(), totalDuration);
+        int currentPosition = Utilities.progressToTimer(seekBar.getProgress(), totalDuration);
 
         // forward or backward to certain seconds
         mMediaPlayer.seekTo(currentPosition);
@@ -331,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private class MySongClickListener implements AdapterSongs.OnSongClickListener {
         @Override
         public void onSongClick(int position) {
-            song = mArrSongs.get(position);
+            Song song = mArrSongs.get(position);
             currentSongIndex = position;
             playSong(position);
         }
