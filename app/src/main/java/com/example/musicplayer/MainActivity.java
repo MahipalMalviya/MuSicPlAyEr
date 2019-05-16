@@ -4,10 +4,8 @@ package com.example.musicplayer;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.PlaybackParams;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,10 +18,10 @@ import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -35,7 +33,9 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -44,8 +44,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static final int REQUEST_CODE_PERMISSION = 1001;
 
-    private String[] permissionList = { Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE };
+    private String[] permissionList = {Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE};
+
 
     private RecyclerView mRecyclerViewSongs;
     private ArrayList<Song> mArrSongs;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton mImgBtnShuffle, mImgBtnPlay, mImgBtnNext, mImgBtnPrevious, mImgBtnRepeat;
     private TextView mTxtSongPlayCurrDuration, mTxtSongPlayTime;
     private SeekBar mSeekBarPlaySong;
+    private ProgressBar mCardViewProgressBar;
 
     private int currentSongIndex = 0;
     private boolean isShuffle = false;
@@ -74,54 +76,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mArrSongs = new ArrayList<>();
         requestAppPermissions();
 
         setContentView(R.layout.activity_main);
-
-        if (!checkPermissionGrantedOrNot()){
-            requestAppPermissions();
-        }
 
 //        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         Toolbar mToolBar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolBar);
 
+        mHandler = new Handler();
+        mMediaPlayer = new MediaPlayer();
+
         initRecyclerView();
 
         getId();
         setListener();
-
-        mHandler = new Handler();
-        mMediaPlayer = new MediaPlayer();
-
-        mSeekBarPlaySong.setOnSeekBarChangeListener(this);
-        mMediaPlayer.setOnCompletionListener(this);
-
-        mArrSongs = new ArrayList<>();
-
-        final Runnable uiRunnable = new Runnable() {
-            @Override
-            public void run() {
-                AdapterSongs mAdapterSongs = new AdapterSongs(mArrSongs, new AdapterSongs.OnSongClickListener() {
-                    @Override
-                    public void onSongClick(int position) {
-                        currentSongIndex = position;
-                        playSong(position);
-                    }
-                });
-                mRecyclerViewSongs.setAdapter(mAdapterSongs);
-            }
-        };
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mArrSongs = SongManager.getMp3Songs(MainActivity.this);
-                runOnUiThread(uiRunnable);
-            }
-        });
-        thread.start();
 
         if (!mArrSongs.isEmpty()) {
 
@@ -152,29 +123,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private boolean checkPermissionGrantedOrNot() {
-        for (String s : permissionList) {
-            int res = checkCallingOrSelfPermission(s);
-            return (res != PackageManager.PERMISSION_GRANTED);
-        }
-        return false;
-    }
-
-    private void requestAppPermissions() {
-        //check which permission granted
-        List<String> listPermissionNeeded = new ArrayList<>();
-        for (String permission: permissionList){
-            if (ContextCompat.checkSelfPermission(MainActivity.this,permission) != PackageManager.PERMISSION_GRANTED){
-                listPermissionNeeded.add(permission);
+    private void loadSongs() {
+        final Runnable uiRunnable = new Runnable() {
+            @Override
+            public void run() {
+                mCardViewProgressBar.setVisibility(View.GONE);
+                AdapterSongs mAdapterSongs = new AdapterSongs(mArrSongs, new AdapterSongs.OnSongClickListener() {
+                    @Override
+                    public void onSongClick(int position) {
+                        currentSongIndex = position;
+                        playSong(position);
+                    }
+                });
+                mRecyclerViewSongs.setAdapter(mAdapterSongs);
             }
-        }
+        };
 
-        //ask for non-permission granted
-        if (!listPermissionNeeded.isEmpty()){
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    listPermissionNeeded.toArray(new String[listPermissionNeeded.size()]),REQUEST_CODE_PERMISSION);
-            return;
-        }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mArrSongs = SongManager.getMp3Songs(MainActivity.this);
+                runOnUiThread(uiRunnable);
+            }
+        });
+        thread.start();
     }
 
     private void initRecyclerView() {
@@ -187,6 +159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             mRelative = findViewById(R.id.relative);
             mSlidingUpLayout = findViewById(R.id.sliding_layout);
+            mCardViewProgressBar = findViewById(R.id.progress_bar);
 
             //on SlideUpPanel Layout
             mImgPlayingSong = findViewById(R.id.img_playing_song);
@@ -210,6 +183,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void setListener() {
         try {
+            mSeekBarPlaySong.setOnSeekBarChangeListener(this);
+            mMediaPlayer.setOnCompletionListener(this);
+
             mImgBtnPlayOnSlideLay.setOnClickListener(this);
             mImgBtnPlay.setOnClickListener(this);
             mImgBtnNext.setOnClickListener(this);
@@ -219,6 +195,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void requestAppPermissions() {
+        //check which permission granted
+        List<String> listPermissionNeeded = new ArrayList<>();
+        for (String permission : permissionList) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionNeeded.add(permission);
+            }
+        }
+
+        //ask for non-permission granted
+        if (!listPermissionNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this,
+                    listPermissionNeeded.toArray(new String[listPermissionNeeded.size()]), REQUEST_CODE_PERMISSION);
+            return;
+        }
+
+        loadSongs();
     }
 
     @Override
@@ -488,20 +483,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         //Gather permission grant results
         if (requestCode == REQUEST_CODE_PERMISSION) {
+            Map<String, Integer> perms = new HashMap<>();
+            // Initial
+            perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
+            perms.put(Manifest.permission.READ_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
+
             int deniedCount = 0;
-            for (int granted : grantResults) {
+            for (int i = 0; i < permissions.length; i++) {
+                perms.put(permissions[i], grantResults[i]);
                 //add only permissions which are denied
-                if (granted == PackageManager.PERMISSION_DENIED) {
+
+                if (perms.get(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                        PackageManager.PERMISSION_GRANTED && perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                        PackageManager.PERMISSION_GRANTED) {
+                    loadSongs();
+                } else if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                     deniedCount++;
                 }
             }
+
             if (deniedCount > 0) {
                 requestAppPermissions();
             }
+
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
+
 }
