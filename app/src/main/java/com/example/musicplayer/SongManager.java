@@ -19,10 +19,10 @@ import java.util.ArrayList;
 
 class SongManager {
 
-    private Bitmap bitmap;
+    private static Bitmap bitmap;
 
 
-    ArrayList<Song> getMp3Songs(Context context) {
+    static ArrayList<Song> getMp3Songs(Context context) {
 
         ArrayList<Song> arrayList = new ArrayList<>();
 
@@ -42,7 +42,6 @@ class SongManager {
                     String artist_name = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
 
                     String fullPath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-//                    Log.e("tag", "getMp3Songs: "+fullPath );
 
                     MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
                     metadataRetriever.setDataSource(fullPath);

@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import android.annotation.SuppressLint;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,9 +13,11 @@ import java.util.ArrayList;
 
 public class AdapterSongs extends RecyclerView.Adapter<AdapterSongs.SongHolder>{
 
-    ArrayList<Song> mArrSong;
+    private ArrayList<Song> mArrSong;
+    private OnSongClickListener mOnSongClickListener;
 
-    public AdapterSongs(ArrayList<Song> mArrSong) {
+    AdapterSongs(ArrayList<Song> mArrSong, OnSongClickListener onSongClickListener) {
+        this.mOnSongClickListener = onSongClickListener;
         this.mArrSong = mArrSong;
     }
 
@@ -22,14 +25,9 @@ public class AdapterSongs extends RecyclerView.Adapter<AdapterSongs.SongHolder>{
         void onSongClick(int position);
     }
 
-    private OnSongClickListener mOnSongClickListener;
-
-    public void setOnSongClickListener(OnSongClickListener onSongClickListener){
-        mOnSongClickListener = onSongClickListener;
-    }
-
+    @NonNull
     @Override
-    public AdapterSongs.SongHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public AdapterSongs.SongHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_song_list,null);
         return new SongHolder(view);
     }

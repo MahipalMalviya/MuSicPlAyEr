@@ -2,4 +2,6 @@
     <string name="app_name">MuSic Player</string>
     <string name="artistname">artistname</string>
     <string name="duration">duration</string>
+
+    <string name="no_song_available">not available song in playlist.</string>
 </resources>

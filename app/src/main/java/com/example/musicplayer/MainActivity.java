@@ -1,19 +1,26 @@
 package com.example.musicplayer;
 
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.PlaybackParams;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -28,11 +35,17 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
+
+    public static final int REQUEST_CODE_PERMISSION = 1001;
+
+    private String[] permissionList = { Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE };
 
     private RecyclerView mRecyclerViewSongs;
     private ArrayList<Song> mArrSongs;
@@ -60,7 +73,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestAppPermissions();
+
         setContentView(R.layout.activity_main);
+
+        if (!checkPermissionGrantedOrNot()){
+            requestAppPermissions();
+        }
 
 //        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
@@ -72,49 +92,89 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getId();
         setListener();
 
-        mRelative = findViewById(R.id.relative);
-
         mHandler = new Handler();
         mMediaPlayer = new MediaPlayer();
-        SongManager songManager = new SongManager();
 
         mSeekBarPlaySong.setOnSeekBarChangeListener(this);
         mMediaPlayer.setOnCompletionListener(this);
 
         mArrSongs = new ArrayList<>();
-        mArrSongs = songManager.getMp3Songs(MainActivity.this);
 
-        AdapterSongs mAdapterSongs = new AdapterSongs(mArrSongs);
-        mAdapterSongs.setOnSongClickListener(new MySongClickListener());
-        mRecyclerViewSongs.setAdapter(mAdapterSongs);
-        mAdapterSongs.notifyDataSetChanged();
-
-        mSlidingUpLayout = findViewById(R.id.sliding_layout);
-        mSlidingUpLayout.addPanelSlideListener(new PanelSlideListener() {
-
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+        final Runnable uiRunnable = new Runnable() {
             @Override
-            public void onPanelSlide(View panel, float slideOffset) {
-
-                if (slideOffset > 0.88) {
-                    mRelative.setBackgroundColor(getResources().getColor(R.color.whiteTransparent));
-
-                    mImgBtnPlayOnSlideLay.setVisibility(View.INVISIBLE);
-                    changeMusicAlbumArt(currentSongIndex);
-                    mImgCurrentPlaySong.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                }
-                if (slideOffset < 0.09) {
-                    mImgBtnPlayOnSlideLay.setVisibility(View.VISIBLE);
-                    mImgCurrentPlaySong.setImageResource(R.drawable.music);
-                    getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
-                }
+            public void run() {
+                AdapterSongs mAdapterSongs = new AdapterSongs(mArrSongs, new AdapterSongs.OnSongClickListener() {
+                    @Override
+                    public void onSongClick(int position) {
+                        currentSongIndex = position;
+                        playSong(position);
+                    }
+                });
+                mRecyclerViewSongs.setAdapter(mAdapterSongs);
             }
+        };
 
+        Thread thread = new Thread(new Runnable() {
             @Override
-            public void onPanelStateChanged(View panel, PanelState previousState, PanelState newState) {
-
+            public void run() {
+                mArrSongs = SongManager.getMp3Songs(MainActivity.this);
+                runOnUiThread(uiRunnable);
             }
         });
+        thread.start();
+
+        if (!mArrSongs.isEmpty()) {
+
+            mSlidingUpLayout.addPanelSlideListener(new PanelSlideListener() {
+
+                @Override
+                public void onPanelSlide(View panel, float slideOffset) {
+
+                    if (slideOffset > 0.88) {
+                        mRelative.setBackgroundColor(getResources().getColor(R.color.whiteTransparent));
+
+                        mImgBtnPlayOnSlideLay.setVisibility(View.INVISIBLE);
+                        changeMusicAlbumArt(currentSongIndex);
+                        mImgCurrentPlaySong.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    }
+                    if (slideOffset < 0.09) {
+                        mImgBtnPlayOnSlideLay.setVisibility(View.VISIBLE);
+                        mImgCurrentPlaySong.setImageResource(R.drawable.music);
+                        getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+                    }
+                }
+
+                @Override
+                public void onPanelStateChanged(View panel, PanelState previousState, PanelState newState) {
+
+                }
+            });
+        }
+    }
+
+    private boolean checkPermissionGrantedOrNot() {
+        for (String s : permissionList) {
+            int res = checkCallingOrSelfPermission(s);
+            return (res != PackageManager.PERMISSION_GRANTED);
+        }
+        return false;
+    }
+
+    private void requestAppPermissions() {
+        //check which permission granted
+        List<String> listPermissionNeeded = new ArrayList<>();
+        for (String permission: permissionList){
+            if (ContextCompat.checkSelfPermission(MainActivity.this,permission) != PackageManager.PERMISSION_GRANTED){
+                listPermissionNeeded.add(permission);
+            }
+        }
+
+        //ask for non-permission granted
+        if (!listPermissionNeeded.isEmpty()){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    listPermissionNeeded.toArray(new String[listPermissionNeeded.size()]),REQUEST_CODE_PERMISSION);
+            return;
+        }
     }
 
     private void initRecyclerView() {
@@ -125,6 +185,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void getId() {
         try {
+            mRelative = findViewById(R.id.relative);
+            mSlidingUpLayout = findViewById(R.id.sliding_layout);
+
             //on SlideUpPanel Layout
             mImgPlayingSong = findViewById(R.id.img_playing_song);
             mTxtPlayingSongName = findViewById(R.id.txt_playing_songName);
@@ -167,7 +230,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     if (mMediaPlayer.isPlaying()) {
                         if (mMediaPlayer != null) {
-
                             mMediaPlayer.pause();
                             mImgBtnPlayOnSlideLay.setImageResource(R.drawable.ic_action_play);
                             mImgBtnPlay.setImageResource(R.drawable.ic_action_play);
@@ -187,8 +249,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_song_play:
                 try {
                     if (mMediaPlayer.isPlaying()) {
-                        if (mMediaPlayer != null) {
 
+                        if (mMediaPlayer != null) {
                             mMediaPlayer.pause();
                             mImgBtnPlay.setImageResource(R.drawable.ic_action_play);
                             mImgBtnPlayOnSlideLay.setImageResource(R.drawable.ic_action_play);
@@ -319,16 +381,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateProgressBar();
     }
 
-
-    private class MySongClickListener implements AdapterSongs.OnSongClickListener {
-        @Override
-        public void onSongClick(int position) {
-            Song song = mArrSongs.get(position);
-            currentSongIndex = position;
-            playSong(position);
-        }
-    }
-
     public void playSong(final int songIndex) {
         try {
             if (mMediaPlayer.isPlaying()) {
@@ -431,6 +483,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             mMediaPlayer.release();
             mMediaPlayer = null;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        //Gather permission grant results
+        if (requestCode == REQUEST_CODE_PERMISSION) {
+            int deniedCount = 0;
+            for (int granted : grantResults) {
+                //add only permissions which are denied
+                if (granted == PackageManager.PERMISSION_DENIED) {
+                    deniedCount++;
+                }
+            }
+            if (deniedCount > 0) {
+                requestAppPermissions();
+            }
         }
     }
 }
