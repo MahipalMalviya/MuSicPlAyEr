@@ -17,7 +17,6 @@
             android:background="@mipmap/ic_launcher_foreground" />
     </RelativeLayout>
 
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

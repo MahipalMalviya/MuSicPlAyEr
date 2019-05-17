@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         mImgBtnPlayOnSlideLay.setVisibility(View.INVISIBLE);
                         changeMusicAlbumArt(currentSongIndex);
-                        mImgCurrentPlaySong.setScaleType(ImageView.ScaleType.CENTER_CROP);
+//                        mImgCurrentPlaySong.setScaleType(ImageView.ScaleType.CENTER_CROP);
                     }
                     if (slideOffset < 0.09) {
                         mImgBtnPlayOnSlideLay.setVisibility(View.VISIBLE);
@@ -472,13 +472,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
 
-        if (mMediaPlayer != null) {
-            if (mMediaPlayer.isPlaying()) {
-                mMediaPlayer.stop();
-            }
-            mMediaPlayer.release();
-            mMediaPlayer = null;
-        }
     }
 
     @Override
