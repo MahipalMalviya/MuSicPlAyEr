@@ -2,6 +2,7 @@ package com.example.musicplayer;
 
 import android.graphics.Bitmap;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import java.io.Serializable;
 
@@ -10,18 +11,14 @@ import java.io.Serializable;
  */
 
 public class Song implements Serializable{
-    public long songId;
-    public String songTitle;
-    public String songArtist;
-    public String path;
-    public String minute;
-    public String second;
-    public String album;
+    private long songId;
+    private String songTitle;
+    private String songArtist;
+    private String path;
+    private String minute;
+    private String second;
+    private String album;
     public Bitmap albumArt;
-
-    public Song() {
-
-    }
 
     public Song(long songId, String songTitle, String songArtist, String path, String minute,String second, String album, Bitmap albumArt) {
         this.songId = songId;
@@ -98,8 +95,17 @@ public class Song implements Serializable{
         this.albumArt = albumArt;
     }
 
+    @Override
     public String toString() {
-        return String.format("songId: %d, Title: %s, Artist: %s, Path: %s, Genere: %d, minute: %s, second: %s ",
-                songId, songTitle, songArtist, path,  minute, second);
+        return "Song{" +
+                "songId=" + songId +
+                ", songTitle='" + songTitle + '\'' +
+                ", songArtist='" + songArtist + '\'' +
+                ", path='" + path + '\'' +
+                ", minute='" + minute + '\'' +
+                ", second='" + second + '\'' +
+                ", album='" + album + '\'' +
+                ", albumArt=" + albumArt +
+                '}';
     }
 }
