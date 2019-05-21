@@ -15,15 +15,17 @@ class SplashScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.lay_splash_screen)
 
-        Handler().postDelayed({
-            val mainIntent = Intent(this, MainActivity::class.java)
-            startActivity(mainIntent)
-            finish()
-        }, SPLASH_TIME_OUT.toLong())
+        runOnUiThread {
+            Handler().postDelayed({
+                val mainIntent = Intent(this, MainActivity::class.java)
+                startActivity(mainIntent)
+                finish()
+            }, SPLASH_TIME_OUT)
+        }
     }
 
     companion object {
 
-        private val SPLASH_TIME_OUT = 3000
+        private const val SPLASH_TIME_OUT = 3000L
     }
 }
