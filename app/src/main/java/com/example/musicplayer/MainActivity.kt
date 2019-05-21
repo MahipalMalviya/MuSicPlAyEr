@@ -148,6 +148,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         val uiRunnable = Runnable {
             mCardViewProgressBar?.visibility = View.GONE
 
+            if (mArrSongs?.isEmpty() == true) {
+                Utilities.showMessage(this,"no song available.",4)
+                return@Runnable
+            }
+
             val mAdapterSongs = AdapterSongs(mArrSongs)
             mRecyclerViewSongs?.adapter = mAdapterSongs
 
@@ -238,14 +243,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         when (v.id) {
 
             R.id.imgBtn_play -> try {
-                if (mMediaPlayer?.isPlaying == true) {
+                if (mArrSongs?.isNotEmpty() == true && mMediaPlayer?.isPlaying == true) {
                     if (mMediaPlayer != null) {
                         mMediaPlayer?.pause()
                         mImgBtnPlayOnSlideLay?.setImageResource(R.drawable.ic_action_play)
                         mImgBtnPlay?.setImageResource(R.drawable.ic_action_play)
                     }
                 } else {
-                    if (mMediaPlayer != null) {
+                    if (mArrSongs?.isNotEmpty() == true && mMediaPlayer != null) {
                         mMediaPlayer?.start()
                         mImgBtnPlayOnSlideLay?.setImageResource(R.drawable.ic_action_pause)
                         mImgBtnPlay?.setImageResource(R.drawable.ic_action_pause)
@@ -256,7 +261,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             }
 
             R.id.btn_song_play -> try {
-                if (mMediaPlayer?.isPlaying == true) {
+                if (mArrSongs?.isNotEmpty() == true && mMediaPlayer?.isPlaying == true) {
 
                     if (mMediaPlayer != null) {
                         mMediaPlayer?.pause()
@@ -264,7 +269,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
                         mImgBtnPlayOnSlideLay?.setImageResource(R.drawable.ic_action_play)
                     }
                 } else {
-                    if (mMediaPlayer != null) {
+                    if (mArrSongs?.isNotEmpty() == true && mMediaPlayer != null) {
                         mMediaPlayer?.start()
                         mImgBtnPlay?.setImageResource(R.drawable.ic_action_pause)
                         mImgBtnPlayOnSlideLay?.setImageResource(R.drawable.ic_action_pause)
@@ -276,7 +281,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
             R.id.btn_song_next ->
 
-                if (currentSongIndex < mArrSongs!!.size - 1) {
+                if (mArrSongs?.isNotEmpty() == true && currentSongIndex < mArrSongs?.size?:0 - 1) {
                     playSong(currentSongIndex + 1)
                     changeMusicAlbumArt(currentSongIndex + 1)
                     currentSongIndex += 1
@@ -287,23 +292,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
             R.id.btn_song_previous ->
 
-                if (currentSongIndex > 0) {
+                if (mArrSongs?.isNotEmpty() == true && currentSongIndex > 0) {
                     playSong(currentSongIndex - 1)
                     changeMusicAlbumArt(currentSongIndex - 1)
                     currentSongIndex -= 1
 
-                } else {
+                } else if (mArrSongs?.isNotEmpty() == true){
                     // play last song
                     playSong(mArrSongs?.size?:0 - 1)
                     currentSongIndex = mArrSongs?.size?:0 - 1
                 }
             R.id.btn_song_shuffle_play ->
 
-                if (isShuffle) {
+                if (mArrSongs?.isNotEmpty() == true && isShuffle) {
                     isShuffle = false
                     Toast.makeText(applicationContext, "Shuffle is OFF", Toast.LENGTH_SHORT).show()
                     mImgBtnShuffle?.setImageResource(R.drawable.ic_action_shuffle_off)
-                } else {
+                } else if (mArrSongs?.isNotEmpty() == true){
                     // make repeat to true
                     isShuffle = true
                     Toast.makeText(applicationContext, "Shuffle is ON", Toast.LENGTH_SHORT).show()
@@ -315,11 +320,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
             R.id.btn_song_repeat_play ->
 
-                if (isRepeat) {
+                if (mArrSongs?.isNotEmpty() == true && isRepeat) {
                     isRepeat = false
                     Toast.makeText(applicationContext, "Repeat is OFF", Toast.LENGTH_SHORT).show()
                     mImgBtnRepeat?.setImageResource(R.drawable.ic_action_repeat_off)
-                } else {
+                } else if(mArrSongs?.isNotEmpty() == true)    {
                     // make repeat to true
                     isRepeat = true
                     Toast.makeText(applicationContext, "Repeat is ON", Toast.LENGTH_SHORT).show()
@@ -361,30 +366,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
     private fun playSong(songIndex: Int) {
         try {
-            if (mMediaPlayer?.isPlaying == true) {
-                mMediaPlayer?.stop()
+            if (mArrSongs?.size?:0 > 0) {
+                if (mMediaPlayer?.isPlaying == true) {
+                    mMediaPlayer?.stop()
+                }
+                mMediaPlayer?.reset()
+
+                mMediaPlayer?.setDataSource(mArrSongs?.get(songIndex)?.path)
+                //            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mMediaPlayer?.prepare()
+                mMediaPlayer?.setOnPreparedListener { mp ->
+                    mp.start()
+
+                    mMediaPlayer?.playbackParams = PlaybackParams().allowDefaults().setAudioFallbackMode(PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT)
+                    mImgPlayingSong?.setImageBitmap(mArrSongs?.get(songIndex)?.getAlbumArt())
+                    mTxtPlayingSongName?.text = mArrSongs?.get(songIndex)?.songTitle
+                    mImgBtnPlayOnSlideLay?.setImageResource(R.drawable.ic_action_pause)
+                    mImgBtnPlay?.setImageResource(R.drawable.ic_action_pause)
+
+                    mSeekBarPlaySong?.progress = 0
+                    mSeekBarPlaySong?.max = 100
+
+                    updateProgressBar()
+                }
+                mMediaPlayer?.prepareAsync()
             }
-            mMediaPlayer?.reset()
-
-            mMediaPlayer?.setDataSource(mArrSongs?.get(songIndex)?.path)
-            //            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mMediaPlayer?.prepare()
-            mMediaPlayer?.setOnPreparedListener { mp ->
-                mp.start()
-
-                mMediaPlayer?.playbackParams = PlaybackParams().allowDefaults().setAudioFallbackMode(PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT)
-                mImgPlayingSong?.setImageBitmap(mArrSongs?.get(songIndex)?.getAlbumArt())
-                mTxtPlayingSongName?.text = mArrSongs?.get(songIndex)?.songTitle
-                mImgBtnPlayOnSlideLay?.setImageResource(R.drawable.ic_action_pause)
-                mImgBtnPlay?.setImageResource(R.drawable.ic_action_pause)
-
-                mSeekBarPlaySong?.progress = 0
-                mSeekBarPlaySong?.max = 100
-
-                updateProgressBar()
-            }
-            mMediaPlayer?.prepareAsync()
-
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (iState: IllegalStateException) {

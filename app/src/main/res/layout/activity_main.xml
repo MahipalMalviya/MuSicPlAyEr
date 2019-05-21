@@ -38,6 +38,7 @@
                 android:layout_height="wrap_content"
                 app:tabIndicatorColor="@android:color/white"
                 app:tabIndicatorHeight="6dp"
+                android:visibility="gone"
                 app:tabSelectedTextColor="@android:color/white"
                 app:tabTextColor="@android:color/white"
                 sothree:layout_scrollFlags="scroll|enterAlways|snap" />
