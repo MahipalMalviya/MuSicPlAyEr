@@ -1,4 +1,4 @@
-package com.example.musicplayer
+package com.example.musicplayer.adapter
 
 import android.annotation.SuppressLint
 import android.support.v7.widget.RecyclerView
@@ -7,7 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
+import com.example.musicplayer.R
+import com.example.musicplayer.model.Song
 import java.util.ArrayList
+import kotlinx.android.synthetic.main.item_song_list.view.*
 
 class AdapterSongs(private val mArrSong: ArrayList<Song>?) :
         RecyclerView.Adapter<AdapterSongs.SongHolder>() {
@@ -19,32 +23,15 @@ class AdapterSongs(private val mArrSong: ArrayList<Song>?) :
 
     var onItemClick: ((Int) -> Unit)? = null
 
-    interface OnSongClickListener {
-        fun onSongClick(position: Int)
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_song_list, null)
         return SongHolder(view)
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: SongHolder, position: Int) {
-        val song = mArrSong?.get(position)
+        val song = mArrSong?.get(holder.adapterPosition)
 
-        txtSongName.text = song?.getSongTitle()
-        txtArtistName.text = song?.getSongArtist() + "."
-
-        val minutes = song?.getMinute()
-        val seconds = song?.getSecond()
-        if (seconds?.length == 1) {
-            txtDuration.text = "0$minutes:0$seconds"
-        } else {
-            txtDuration.text = "0$minutes:$seconds"
-        }
-
-        imgSong.setImageBitmap(song?.albumArt)
-
+        holder.bindSongs(song)
     }
 
     override fun getItemCount(): Int {
@@ -53,8 +40,31 @@ class AdapterSongs(private val mArrSong: ArrayList<Song>?) :
 
     inner class SongHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        init {
+        @SuppressLint("SetTextI18n")
+        fun bindSongs(song: Song?) {
+            song?.songTitle?.let {
+                itemView.txt_songName.text = it
+            }
+            song?.songArtist?.let {
+                itemView.txt_songArtist.text = "$it."
+            }
 
+            val minutes = song?.minute
+            val seconds = song?.second
+            if (seconds?.length == 1) {
+                itemView.txt_songDuration.text = "0$minutes:0$seconds"
+            } else {
+                itemView.txt_songDuration.text = "0$minutes:$seconds"
+            }
+
+            Glide.with(itemView.context)
+                    .load(song?.albumArtByteArray)
+                    .into(itemView.img_song)
+//            itemView.img_song.setImageBitmap(song?.albumArt)
+
+        }
+
+        init {
             txtSongName = itemView.findViewById(R.id.txt_songName)
             txtArtistName = itemView.findViewById(R.id.txt_songArtist)
             txtDuration = itemView.findViewById(R.id.txt_songDuration)

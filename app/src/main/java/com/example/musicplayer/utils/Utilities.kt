@@ -1,10 +1,13 @@
-package com.example.musicplayer
+package com.example.musicplayer.utils
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.support.design.widget.Snackbar
-import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
 
 /**
  * Created by MAHIPAL-PC on 15-12-2017.
@@ -14,7 +17,7 @@ object Utilities {
 
     fun milliSecondsToTimer(milliseconds: Long): String {
         var finalTimerString = ""
-        var secondsString = ""
+        var secondsString: String
 
         // Convert total duration into time
         val hours = (milliseconds / (1000 * 60 * 60)).toInt()
@@ -67,6 +70,29 @@ object Utilities {
         val textView = view.findViewById<TextView>(android.support.design.R.id.snackbar_text)
         textView.maxLines = maxLine
         snackbar.show()
+    }
+
+    fun getBitmapFromByteArray(byteArray:ByteArray?): Bitmap? {
+        byteArray?.let {
+            try {
+                val options = BitmapFactory.Options()
+                options.inSampleSize = 2
+                return  BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, options)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return null
+    }
+
+    fun setImageByByteArray(context: Context, byteArray: ByteArray?,imageView: ImageView?) {
+        byteArray?.let {
+            imageView?.let {
+                Glide.with(context)
+                        .load(byteArray)
+                        .into(imageView)
+            }
+        }
     }
 
 }

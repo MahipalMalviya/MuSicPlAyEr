@@ -47,7 +47,6 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginBottom="68dp"
             sothree:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <ProgressBar
@@ -65,6 +64,7 @@
                 android:id="@+id/recyclerViewSongList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingBottom="68dp"
                 tools:listitem="@layout/item_song_list" />
 
         </FrameLayout>
@@ -126,7 +126,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="fitXY"
-                android:src="@drawable/music" />
+                android:layout_centerInParent="true"
+                android:background="@color/slidingBackgroundColor" />
 
             <ImageButton
                 android:id="@+id/btn_song_shuffle_play"

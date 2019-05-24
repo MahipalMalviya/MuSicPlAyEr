@@ -1,15 +1,14 @@
-package com.example.musicplayer;
+package com.example.musicplayer.utils;
 
-import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.util.Log;
+
+import com.example.musicplayer.model.Song;
 
 import java.util.ArrayList;
 
@@ -17,12 +16,12 @@ import java.util.ArrayList;
  * Created by MAHIPAL-PC on 10-12-2017.
  */
 
-class SongManager {
+public class SongManager {
 
-    private static Bitmap bitmap;
+    private static byte[] albumArtByteArray;
 
 
-    static ArrayList<Song> getMp3Songs(Context context) {
+    public static ArrayList<Song> getMp3Songs(Context context) {
 
         ArrayList<Song> arrayList = new ArrayList<>();
 
@@ -47,12 +46,7 @@ class SongManager {
                     metadataRetriever.setDataSource(fullPath);
 
                     try {
-                        byte[] art = metadataRetriever.getEmbeddedPicture();
-                        BitmapFactory.Options opt = new BitmapFactory.Options();
-                        opt.inSampleSize = 2;
-                        if (art != null) {
-                            bitmap = BitmapFactory.decodeByteArray(art, 0, art.length, opt);
-                        }
+                        albumArtByteArray = metadataRetriever.getEmbeddedPicture();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -74,7 +68,7 @@ class SongManager {
                     String ext = songName.substring(songName.lastIndexOf(".") + 1);
 
                     if (ext.equals("mp3") || ext.equals("MP3")) {
-                        Song song = new Song(song_id, songName, artist_name, fullPath, minutes,seconds, "", bitmap);
+                        Song song = new Song(song_id, songName, artist_name, fullPath, minutes,seconds, "", albumArtByteArray);
                         arrayList.add(song);
                     }
 

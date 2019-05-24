@@ -1,10 +1,11 @@
-package com.example.musicplayer;
+package com.example.musicplayer.model;
 
 import android.graphics.Bitmap;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * Created by MAHIPAL-PC on 04-12-2017.
@@ -18,9 +19,9 @@ public class Song implements Serializable{
     private String minute;
     private String second;
     private String album;
-    public Bitmap albumArt;
+    private byte[] albumArtByteArray;
 
-    public Song(long songId, String songTitle, String songArtist, String path, String minute,String second, String album, Bitmap albumArt) {
+    public Song(long songId, String songTitle, String songArtist, String path, String minute,String second, String album, byte[] albumArtByteArray) {
         this.songId = songId;
         this.songTitle = songTitle;
         this.songArtist = songArtist;
@@ -28,7 +29,7 @@ public class Song implements Serializable{
         this.minute = minute;
         this.second = second;
         this.album = album;
-        this.albumArt = albumArt;
+        this.albumArtByteArray = albumArtByteArray;
     }
 
     public String getMinute() {
@@ -87,12 +88,12 @@ public class Song implements Serializable{
         this.album = album;
     }
 
-    public Bitmap getAlbumArt() {
-        return albumArt;
+    public byte[] getAlbumArtByteArray() {
+        return albumArtByteArray;
     }
 
-    public void setAlbumArt(Bitmap albumArt) {
-        this.albumArt = albumArt;
+    public void setAlbumArtByteArray(byte[] albumArtByteArray) {
+        this.albumArtByteArray = albumArtByteArray;
     }
 
     @Override
@@ -105,7 +106,7 @@ public class Song implements Serializable{
                 ", minute='" + minute + '\'' +
                 ", second='" + second + '\'' +
                 ", album='" + album + '\'' +
-                ", albumArt=" + albumArt +
+                ", albumArtByteArray=" + Arrays.toString(albumArtByteArray) +
                 '}';
     }
 }

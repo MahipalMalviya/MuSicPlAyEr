@@ -1,4 +1,4 @@
-package com.example.musicplayer
+package com.example.musicplayer.activity
 
 
 import android.Manifest
@@ -9,7 +9,6 @@ import android.media.PlaybackParams
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.support.annotation.RequiresApi
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
@@ -25,6 +24,12 @@ import android.widget.RelativeLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import com.example.musicplayer.R
+import com.example.musicplayer.utils.SongManager
+import com.example.musicplayer.adapter.AdapterSongs
+import com.example.musicplayer.model.Song
+import com.example.musicplayer.utils.SpUtility
+import com.example.musicplayer.utils.Utilities
 
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener
@@ -149,7 +154,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             mCardViewProgressBar?.visibility = View.GONE
 
             if (mArrSongs?.isEmpty() == true) {
-                Utilities.showMessage(this,"no song available.",4)
+                Utilities.showMessage(this, "no song available.", 4)
                 return@Runnable
             }
 
@@ -171,7 +176,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
     private fun initRecyclerView() {
         mRecyclerViewSongs = findViewById(R.id.recyclerViewSongList)
-        mRecyclerViewSongs!!.layoutManager = LinearLayoutManager(
+        mRecyclerViewSongs?.layoutManager = LinearLayoutManager(
                 this, LinearLayoutManager.VERTICAL, false)
     }
 
@@ -378,8 +383,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
                 mMediaPlayer?.setOnPreparedListener { mp ->
                     mp.start()
 
-                    mMediaPlayer?.playbackParams = PlaybackParams().allowDefaults().setAudioFallbackMode(PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT)
-                    mImgPlayingSong?.setImageBitmap(mArrSongs?.get(songIndex)?.getAlbumArt())
+                    mMediaPlayer?.playbackParams = PlaybackParams().allowDefaults().
+                            setAudioFallbackMode(PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT)
+                    Utilities.setImageByByteArray(this, mArrSongs?.get(songIndex)?.albumArtByteArray, mImgPlayingSong)
                     mTxtPlayingSongName?.text = mArrSongs?.get(songIndex)?.songTitle
                     mImgBtnPlayOnSlideLay?.setImageResource(R.drawable.ic_action_pause)
                     mImgBtnPlay?.setImageResource(R.drawable.ic_action_pause)
@@ -429,9 +435,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
     fun changeMusicAlbumArt(currentSongIndex: Int) {
 
-        mImgCurrentPlaySong?.setImageBitmap(mArrSongs?.get(currentSongIndex)?.getAlbumArt())
+        Utilities.setImageByByteArray(this, mArrSongs?.get(currentSongIndex)?.albumArtByteArray,
+                mImgCurrentPlaySong)
 
-        mArrSongs?.get(currentSongIndex)?.getAlbumArt()?.let {
+        val bitmap = Utilities.getBitmapFromByteArray(mArrSongs?.get(currentSongIndex)?.albumArtByteArray)
+
+        bitmap?.let {
             Palette.from(it).generate { palette ->
             val vibrantSwatch = palette?.vibrantSwatch
                 if (vibrantSwatch != null) {
@@ -441,10 +450,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+
+        SpUtility.getInstance(this)?.setCurrentSongIndex(currentSongIndex)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
 
         if (mMediaPlayer?.isPlaying == true) {
+
             mHandler?.removeCallbacks(mUpdateTimeTask)
             mMediaPlayer?.stop()
             mMediaPlayer?.release()
@@ -477,7 +493,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
                 if (perms[Manifest.permission.READ_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED &&
                         perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED) {
+
                     loadSongs()
+                    return
                 } else if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                     deniedCount++
                 }
