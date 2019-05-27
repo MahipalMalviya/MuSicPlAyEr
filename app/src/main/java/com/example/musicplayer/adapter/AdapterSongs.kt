@@ -59,8 +59,8 @@ class AdapterSongs(private val mArrSong: ArrayList<Song>?) :
 
             Glide.with(itemView.context)
                     .load(song?.albumArtByteArray)
+                    .placeholder(R.drawable.music)
                     .into(itemView.img_song)
-//            itemView.img_song.setImageBitmap(song?.albumArt)
 
         }
 

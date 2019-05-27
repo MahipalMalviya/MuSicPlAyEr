@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#9575cd</color>
-    <color name="colorPrimaryDark">#65499c</color>
-    <color name="colorAccent">#1565c0</color>
+    <color name="colorPrimary">#4E4343</color>
+    <color name="colorPrimaryDark">#3D3636</color>
+    <color name="colorAccent">#93A8B1</color>
 
     <color name="whiteTransparent">#b7ffffff</color>
-    <color name="slidingBackgroundColor">#B7B69C9C</color>
+    <color name="transparent">#07FFFFFF</color>
 </resources>

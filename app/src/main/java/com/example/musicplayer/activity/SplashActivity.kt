@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
+import android.view.WindowManager
 import com.example.musicplayer.R
 
 /**
@@ -14,6 +15,9 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
         setContentView(R.layout.lay_splash_screen)
 
         runOnUiThread {
@@ -27,6 +31,6 @@ class SplashActivity : AppCompatActivity() {
 
     companion object {
 
-        private const val SPLASH_TIME_OUT = 3000L
+        private const val SPLASH_TIME_OUT = 2000L
     }
 }
