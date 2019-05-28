@@ -22,6 +22,7 @@ import android.widget.Toast
 import com.example.musicplayer.R
 import com.example.musicplayer.utils.SongManager
 import com.example.musicplayer.adapter.AdapterSongs
+import com.example.musicplayer.exception.DefaultExceptionHandler
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.utils.SpUtility
 import com.example.musicplayer.utils.Utilities
@@ -79,6 +80,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Thread.setDefaultUncaughtExceptionHandler(DefaultExceptionHandler(this))
 
         mArrSongs = ArrayList()
         requestAppPermissions()
