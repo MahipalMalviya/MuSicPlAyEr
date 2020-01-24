@@ -4,10 +4,11 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.support.design.widget.Snackbar
+import com.google.android.material.snackbar.Snackbar
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.example.musicplayer.R
 
 /**
  * Created by MAHIPAL-PC on 15-12-2017.
@@ -57,7 +58,7 @@ object Utilities {
     fun progressToTimer(progress: Int, totalDuration: Int): Int {
         var totalDuration = totalDuration
         var currentDuration = 0
-        totalDuration = totalDuration / 1000
+        totalDuration /= 1000
         currentDuration = (progress.toDouble() / 100 * totalDuration).toInt()
 
         // return current duration in milliseconds
@@ -67,7 +68,7 @@ object Utilities {
     fun showMessage(context: Context, message: String, maxLine: Int) {
         val snackbar = Snackbar.make((context as Activity).findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
         val view = snackbar.view
-        val textView = view.findViewById<TextView>(android.support.design.R.id.snackbar_text)
+        val textView = view.findViewById<TextView>(R.id.snackbar_text)
         textView.maxLines = maxLine
         snackbar.show()
     }

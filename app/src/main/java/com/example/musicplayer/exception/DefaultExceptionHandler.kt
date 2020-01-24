@@ -8,6 +8,7 @@ import android.content.Intent
 import android.util.Log
 import com.crashlytics.android.Crashlytics
 import com.example.musicplayer.activity.SplashActivity
+import kotlin.system.exitProcess
 
 class DefaultExceptionHandler(private val activity: Activity): Thread.UncaughtExceptionHandler {
 
@@ -40,6 +41,6 @@ class DefaultExceptionHandler(private val activity: Activity): Thread.UncaughtEx
         activity.finish()
 
         //This will stop your application and take out from it.
-        System.exit(2)
+        exitProcess(2)
     }
 }
