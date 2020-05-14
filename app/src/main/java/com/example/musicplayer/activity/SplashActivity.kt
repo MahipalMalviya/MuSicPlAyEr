@@ -74,7 +74,7 @@ class SplashActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CODE_PERMISSION) {
             val perms = HashMap<String, Int>()
             // Initial
-            perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
+//            perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
             perms[Manifest.permission.READ_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
 
             var deniedCount = 0
@@ -102,7 +102,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     companion object {
-        val permissionList = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+        val permissionList = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
         private const val SPLASH_TIME_OUT = 3000L
         private const val REQUEST_CODE_PERMISSION = 1001
     }

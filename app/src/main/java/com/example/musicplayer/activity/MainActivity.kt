@@ -13,13 +13,9 @@ import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
 import com.example.musicplayer.adapter.AdapterSongs
-import com.example.musicplayer.exception.DefaultExceptionHandler
 import com.example.musicplayer.model.Song
-import com.example.musicplayer.utils.SongManager
-import com.example.musicplayer.utils.SpUtility
 import com.example.musicplayer.utils.Utilities
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
@@ -31,7 +27,6 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
 
-    private var mRecyclerViewSongs: RecyclerView? = null
     private var mArrSongs = ArrayList<Song>()
     private var mMediaPlayer: MediaPlayer? = null
     private var mHandler: Handler? = null
@@ -61,50 +56,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         }
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Thread.setDefaultUncaughtExceptionHandler(DefaultExceptionHandler(this))
+//        Thread.setDefaultUncaughtExceptionHandler(DefaultExceptionHandler(this))
         setContentView(R.layout.activity_main)
-
-        AsyncTaskThread().execute()
 
         setSupportActionBar(toolbar)
 
-        mHandler = Handler()
-        mMediaPlayer = MediaPlayer()
+        AsyncTaskThread().execute()
 
-        initRecyclerView()
-
-        setListener()
-
-        if (mArrSongs.isNotEmpty()) {
-
-            sliding_layout?.addPanelSlideListener(object : PanelSlideListener {
-
-                override fun onPanelSlide(panel: View, slideOffset: Float) {
-
-                    if (slideOffset > 0.88) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent, theme))
-                        }
-
-                        imgBtn_play?.visibility = View.INVISIBLE
-                        changeMusicAlbumArt(currentSongIndex)
-                        img_play_song?.scaleType = ImageView.ScaleType.FIT_XY
-                    }
-                    if (slideOffset < 0.09) {
-                        imgBtn_play?.visibility = View.VISIBLE
-                        img_play_song?.setImageResource(R.drawable.music)
-//                        window.statusBarColor = resources.getColor(R.color.colorPrimaryDark,theme)
-                    }
-                }
-
-                override fun onPanelStateChanged(panel: View, previousState: PanelState, newState: PanelState) {
-
-                }
-            })
-        }
     }
 
     private fun updateUi() {
@@ -115,26 +75,53 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             return
         }
 
-        val mAdapterSongs = AdapterSongs(mArrSongs)
-        mRecyclerViewSongs?.adapter = mAdapterSongs
+        mHandler = Handler()
+        mMediaPlayer = MediaPlayer()
 
-        currentSongIndex = SpUtility.getInstance(this)?.getCurrenSongIndex() ?: 0
-        Utilities.setImageByByteArray(this, mArrSongs[currentSongIndex.plus(1)].albumArtByteArray, img_playing_song)
-        txt_playing_songName?.text = mArrSongs[currentSongIndex.plus(1)].songTitle
-        imgBtn_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
-        changeMusicAlbumArt(currentSongIndex)
-        btn_song_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
+        setListener()
+
+        sliding_layout?.addPanelSlideListener(object : PanelSlideListener {
+
+            override fun onPanelSlide(panel: View, slideOffset: Float) {
+
+                if (slideOffset > 0.88) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent, theme))
+                    }
+
+                    imgBtn_play?.visibility = View.INVISIBLE
+                    img_play_song?.scaleType = ImageView.ScaleType.CENTER_CROP
+                }
+                if (slideOffset < 0.09) {
+                    imgBtn_play?.visibility = View.VISIBLE
+                    img_play_song?.setImageResource(R.drawable.music)
+//                        window.statusBarColor = resources.getColor(R.color.colorPrimaryDark,theme)
+                }
+            }
+
+            override fun onPanelStateChanged(panel: View, previousState: PanelState, newState: PanelState) {
+
+            }
+        })
+
+        recyclerViewSongList?.layoutManager = LinearLayoutManager(
+                this, LinearLayoutManager.VERTICAL, false)
+        val mAdapterSongs = AdapterSongs(mArrSongs)
+        recyclerViewSongList?.adapter = mAdapterSongs
+
+//        currentSongIndex = SpUtility.getInstance(this)?.getCurrenSongIndex() ?: 0
+
+//        Utilities.setImageByByteArray(this, mArrSongs[currentSongIndex.plus(1)].albumArtByteArray, img_playing_song)
+//        txt_playing_songName?.text = mArrSongs[currentSongIndex.plus(1)].songTitle
+//        imgBtn_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
+//        changeMusicAlbumArt(currentSongIndex)
+//        btn_song_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
 
         mAdapterSongs.onItemClick = { adapterPosition ->
             currentSongIndex = adapterPosition
             playSong(adapterPosition)
+            dragView.visibility = View.VISIBLE
         }
-    }
-
-    private fun initRecyclerView() {
-        mRecyclerViewSongs = findViewById(R.id.recyclerViewSongList)
-        mRecyclerViewSongs?.layoutManager = LinearLayoutManager(
-                this, LinearLayoutManager.VERTICAL, false)
     }
 
     private fun setListener() {
@@ -160,16 +147,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
             R.id.imgBtn_play -> try {
                 if (mArrSongs.isNotEmpty() && mMediaPlayer?.isPlaying == true) {
-                    if (mMediaPlayer != null) {
-                        mMediaPlayer?.pause()
-                        imgBtn_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
-                        btn_song_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
-                    }
+                    mMediaPlayer?.pause()
+                    updateUiControls()
                 } else {
                     if (mArrSongs.isNotEmpty() && mMediaPlayer != null) {
                         mMediaPlayer?.start()
-                        imgBtn_play?.setImageResource(R.drawable.ic_pause_24dp)
-                        btn_song_play?.setImageResource(R.drawable.ic_pause_24dp)
+                        updateUiControls()
                     }
                 }
             } catch (iStateException: IllegalStateException) {
@@ -181,14 +164,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
                     if (mMediaPlayer != null) {
                         mMediaPlayer?.pause()
-                        btn_song_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
-                        imgBtn_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
+                        updateUiControls()
                     }
                 } else {
                     if (mArrSongs.isNotEmpty() && mMediaPlayer != null) {
                         mMediaPlayer?.start()
-                        btn_song_play?.setImageResource(R.drawable.ic_pause_24dp)
-                        imgBtn_play?.setImageResource(R.drawable.ic_pause_24dp)
+                        updateUiControls()
                     }
                 }
             } catch (iStateException: IllegalStateException) {
@@ -198,9 +179,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             R.id.btn_song_next ->
 
                 if (mArrSongs.isNotEmpty() && currentSongIndex < mArrSongs.size - 1) {
-                    playSong(currentSongIndex + 1)
-                    changeMusicAlbumArt(currentSongIndex + 1)
                     currentSongIndex += 1
+                    playSong(currentSongIndex)
 
                 } else {
                     playSong(currentSongIndex)
@@ -209,25 +189,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             R.id.btn_song_previous ->
 
                 if (mArrSongs.isNotEmpty() && currentSongIndex > 0) {
-                    playSong(currentSongIndex - 1)
-                    changeMusicAlbumArt(currentSongIndex - 1)
                     currentSongIndex -= 1
+                    playSong(currentSongIndex)
 
                 } else if (mArrSongs.isNotEmpty()) {
                     // play last song
-                    playSong(mArrSongs.size - 1)
                     currentSongIndex = mArrSongs.size - 1
+                    playSong(currentSongIndex)
                 }
             R.id.btn_song_shuffle_play ->
 
                 if (mArrSongs.isNotEmpty() && isShuffle) {
                     isShuffle = false
-                    Toast.makeText(applicationContext, "Shuffle is OFF", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Shuffle OFF", Toast.LENGTH_SHORT).show()
                     btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_off_24dp)
                 } else if (mArrSongs.isNotEmpty()) {
                     // make repeat to true
                     isShuffle = true
-                    Toast.makeText(applicationContext, "Shuffle is ON", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Shuffle ON", Toast.LENGTH_SHORT).show()
                     // make shuffle to false
                     isRepeat = false
                     btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_on_24dp)
@@ -238,12 +217,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
                 if (mArrSongs.isNotEmpty() && isRepeat) {
                     isRepeat = false
-                    Toast.makeText(applicationContext, "Repeat is OFF", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Repeat OFF", Toast.LENGTH_SHORT).show()
                     btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_off_24dp)
                 } else if (mArrSongs.isNotEmpty()) {
                     // make repeat to true
                     isRepeat = true
-                    Toast.makeText(applicationContext, "Repeat is ON", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Repeat ON", Toast.LENGTH_SHORT).show()
                     // make shuffle to false
                     isShuffle = false
                     btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_on_24dp)
@@ -291,23 +270,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
                 mMediaPlayer?.setDataSource(mArrSongs[songIndex].path)
                 //            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 mMediaPlayer?.prepare()
+
+//                startMusicService(mArrSongs[songIndex],action)
+
                 mMediaPlayer?.setOnPreparedListener { mp ->
                     mp.start()
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         mMediaPlayer?.playbackParams = PlaybackParams().allowDefaults().setAudioFallbackMode(PlaybackParams.AUDIO_FALLBACK_MODE_DEFAULT)
                     }
-                    Utilities.setImageByByteArray(this, mArrSongs[songIndex].albumArtByteArray, img_playing_song)
-                    changeMusicAlbumArt(songIndex)
-                    txt_playing_songName?.text = mArrSongs[songIndex].songTitle
-                    imgBtn_play?.setImageResource(R.drawable.ic_pause_24dp)
-                    btn_song_play?.setImageResource(R.drawable.ic_pause_24dp)
+
+                    updateUiControls()
                     seekBar_play_song?.progress = 0
                     seekBar_play_song?.max = 100
-
                     updateProgressBar()
                 }
+
                 mMediaPlayer?.prepareAsync()
+
             }
         } catch (e: IOException) {
             e.printStackTrace()
@@ -315,6 +295,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             iState.printStackTrace()
         }
 
+    }
+
+    fun updateUiControls() {
+        changeMusicAlbumArt(currentSongIndex,img_playing_song)
+        changeMusicAlbumArt(currentSongIndex,img_play_song)
+        txt_playing_songName?.text = mArrSongs[currentSongIndex].songTitle
+
+        if (mMediaPlayer != null && mMediaPlayer?.isPlaying == true) {
+            imgBtn_play?.setImageResource(R.drawable.ic_pause_24dp)
+            btn_song_play?.setImageResource(R.drawable.ic_pause_24dp)
+        } else {
+            imgBtn_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
+            btn_song_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
+        }
     }
 
     override fun onCompletion(mp: MediaPlayer) {
@@ -329,14 +323,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             currentSongIndex = rand.nextInt(mArrSongs.size - 1 + 1)
             playSong(currentSongIndex)
             //set albumArt and change statusBar color when changed song
-            changeMusicAlbumArt(currentSongIndex)
+//            changeMusicAlbumArt(currentSongIndex)
         } else {
             // no repeat or shuffle ON - play next song
             if (currentSongIndex < mArrSongs.size - 1) {
-                playSong(currentSongIndex + 1)
-                //set albumArt and change statusBar color when changed song
-                changeMusicAlbumArt(currentSongIndex + 1)
                 currentSongIndex += 1
+                playSong(currentSongIndex)
             } else {
                 // play first song
                 playSong(0)
@@ -345,23 +337,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         }
     }
 
-    fun changeMusicAlbumArt(currentSongIndex: Int) {
-
+    fun changeMusicAlbumArt(currentSongIndex: Int,imageView: ImageView) {
         Utilities.setImageByByteArray(this, mArrSongs[currentSongIndex].albumArtByteArray,
-                img_play_song)
-
+                imageView)
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
-        if (mMediaPlayer?.isPlaying == true) {
-            SpUtility.getInstance(this)?.setCurrentSongIndex(currentSongIndex)
-            mHandler?.removeCallbacks(mUpdateTimeTask)
-            mMediaPlayer?.stop()
-            mMediaPlayer?.release()
-            mMediaPlayer = null
-        }
+//        if (mMediaPlayer?.isPlaying == true) {
+//            SpUtility.getInstance(this)?.setCurrentSongIndex(currentSongIndex)
+//            mHandler?.removeCallbacks(mUpdateTimeTask)
+//            mMediaPlayer?.stop()
+//            mMediaPlayer?.release()
+//            mMediaPlayer = null
+//        }
     }
 
     override fun onBackPressed() {
@@ -376,7 +366,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
     inner class AsyncTaskThread : AsyncTask<Unit, Unit, Unit>() {
 
         override fun doInBackground(vararg p0: Unit?) {
-            mArrSongs = SongManager.getMp3Songs(this@MainActivity)
+            mArrSongs = Utilities.getMp3Songs(this@MainActivity)
         }
 
         override fun onPostExecute(result: Unit?) {
