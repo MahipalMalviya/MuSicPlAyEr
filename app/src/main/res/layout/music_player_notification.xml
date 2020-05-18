@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal" >
+    android:orientation="horizontal"
+    android:padding="8dp">
 
     <ImageView
         android:id="@+id/status_bar_album_art"
@@ -49,23 +50,24 @@
     </LinearLayout>
 
     <ImageView
+        android:id="@+id/status_bar_prev"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_play_previous_24dp"
+        android:contentDescription="@string/cd_play" />
+
+    <ImageView
         android:id="@+id/status_bar_play"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:contentDescription="@string/cd_play"
-        android:src="@drawable/ic_play_arrow_24dp"/>
+        android:src="@drawable/ic_play_arrow_24dp"
+        android:contentDescription="@string/cd_next" />
 
     <ImageView
         android:id="@+id/status_bar_next"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:contentDescription="@string/cd_next"
-        android:src="@drawable/ic_play_next_24dp" />
-
-    <ImageView
-        android:id="@+id/status_bar_close"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@drawable/ic_close_24dp" />
+        android:src="@drawable/ic_play_next_24dp"
+        android:contentDescription="@string/cd_next"/>
 
 </LinearLayout>

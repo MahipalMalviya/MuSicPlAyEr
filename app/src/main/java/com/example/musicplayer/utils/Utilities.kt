@@ -1,6 +1,7 @@
 package com.example.musicplayer.utils
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -159,6 +160,16 @@ object Utilities {
                         .into(imageView)
             }
         }
+    }
+
+    fun isServiceRunning(serviceName: String,context: Context): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceName.equals(service.service.className,true)) {
+                return true
+            }
+        }
+        return false
     }
 
 }

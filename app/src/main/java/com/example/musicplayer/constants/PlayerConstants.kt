@@ -4,8 +4,8 @@ import android.os.Handler
 import com.example.musicplayer.model.Song
 
 object PlayerConstants {
-    //List of Songs
-//    var SONGS_LIST = ArrayList<Song>()
+
+    var SONG_LIST : ArrayList<Song>? = null
 
     //song number which is playing right now from SONGS_LIST
     var SONG_NUMBER = 0
@@ -24,4 +24,8 @@ object PlayerConstants {
 
     //handler for showing song progress defined in Activities(MainActivity, AudioPlayerActivity)
     var PROGRESSBAR_HANDLER: Handler? = null
+
+    var isShuffle = false
+
+    var isRepeat = false
 }

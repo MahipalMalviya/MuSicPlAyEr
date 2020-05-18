@@ -12,4 +12,8 @@ interface MediaPlayerControls {
 
     fun prevMedia()
 
+    fun shuffleMedia()
+
+    fun repeatMedia()
+
 }

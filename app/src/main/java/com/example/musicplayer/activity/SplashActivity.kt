@@ -74,8 +74,8 @@ class SplashActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CODE_PERMISSION) {
             val perms = HashMap<String, Int>()
             // Initial
-//            perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
             perms[Manifest.permission.READ_EXTERNAL_STORAGE] = PackageManager.PERMISSION_GRANTED
+            perms[Manifest.permission.READ_PHONE_STATE] = PackageManager.PERMISSION_GRANTED
 
             var deniedCount = 0
             for (i in permissions.indices) {
@@ -83,7 +83,7 @@ class SplashActivity : AppCompatActivity() {
                 //add only permissions which are denied
 
                 if (perms[Manifest.permission.READ_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED &&
-                        perms[Manifest.permission.WRITE_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED) {
+                        perms[Manifest.permission.READ_PHONE_STATE] == PackageManager.PERMISSION_GRANTED) {
 
                     launchMp3Activity()
                     return
@@ -102,7 +102,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     companion object {
-        val permissionList = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        val permissionList = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE)
         private const val SPLASH_TIME_OUT = 3000L
         private const val REQUEST_CODE_PERMISSION = 1001
     }
