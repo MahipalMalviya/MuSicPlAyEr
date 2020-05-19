@@ -7,11 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.media.MediaPlayer
-import android.media.PlaybackParams
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
+import android.os.*
 import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -21,63 +17,27 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.musicplayer.R
 import com.example.musicplayer.adapter.AdapterSongs
 import com.example.musicplayer.constants.PlayerConstants
-import com.example.musicplayer.model.Song
 import com.example.musicplayer.service.MusicService
 import com.example.musicplayer.utils.SpUtility
 import com.example.musicplayer.utils.Utilities
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
 import io.fabric.sdk.android.services.concurrency.AsyncTask
-import kotlinx.android.synthetic.main.activity_main.*
-import java.io.IOException
-import java.util.*
+import kotlinx.android.synthetic.main.activity_music_player.*
 
 
-class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
+class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
 
-//    private var mArrSongs = ArrayList<Song>()
-//    private var mMediaPlayer: MediaPlayer? = null
-    private var mHandler: Handler? = null
-    private var musicService: MusicService? = null
     private var serviceBound = false
 
-//    private var currentSongIndex = 0
+    private var musicService: MusicService? = null
 
     companion object {
+        const val ACTION_PLAY_NEW_AUDIO = "com.mahipal.mediaplayer.action.playNewAudio"
         const val ACTION_PLAY = "com.mahipal.mediaplayer.action.play"
         const val ACTION_PAUSE = "com.mahipal.mediaplayer.action.pause"
-        const val ACTION_PREV = "com.mahipal.mediaplayer.action.prev"
         const val ACTION_NEXT = "com.mahipal.mediaplayer.action.next"
-        const val ACTION_STOP = "com.mahipal.mediaplayer.action.stop"
-    }
-
-    private val mUpdateTimeTask = object : Runnable {
-        @SuppressLint("SetTextI18n")
-        override fun run() {
-
-            musicService?.mMediaPlayer?.let { player ->
-
-                try {
-                    val totalDuration = player.duration.toLong()
-                    val currentDuration = player.currentPosition.toLong()
-
-                    // Displaying Total Duration time
-                    txt_song_TotalTime?.text = "" + Utilities.milliSecondsToTimer(totalDuration)
-                    // Displaying time completed playing
-                    txt_song_Curr_Time?.text = "" + Utilities.milliSecondsToTimer(currentDuration)
-
-                    // Updating progress bar
-                    val progress = Utilities.getProgressPercentage(currentDuration, totalDuration)
-                    //Log.d("Progress", ""+progress);
-                    seekBar_play_song?.progress = progress
-
-                    // Running this thread after 100 milliseconds
-                    mHandler?.postDelayed(this, 100)
-                } catch (ex:IllegalStateException) {
-                    ex.printStackTrace()
-                }
-            }
-        }
+        const val ACTION_PREV = "com.mahipal.mediaplayer.action.previous"
     }
 
     private val serviceConnection = object :ServiceConnection {
@@ -85,15 +45,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
             val binder = service as MusicService.LocalBinder
             musicService = binder.service
             serviceBound = true
-
-            musicService?.notificationControl = { notifyAction ->
-                if (notifyAction.equals(MusicService.NOTIFY_NEXT,true) or
-                        notifyAction.equals(MusicService.NOTIFY_PREV,true)) {
-
-                    updateProgressBar()
-                }
-                updateUiControls()
-            }
         }
 
         override fun onServiceDisconnected(componentName: ComponentName?) {
@@ -105,18 +56,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        Thread.setDefaultUncaughtExceptionHandler(DefaultExceptionHandler(this))
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_music_player)
 
         setSupportActionBar(toolbar)
 
         AsyncTaskThread().execute()
+
+        MusicService.notificationControl = {
+            updateUiControls()
+        }
+
+        MusicService.updateUiOnMediaAction = {
+            updateUiControls()
+        }
     }
 
     private fun updateUi() {
         cv_progress_bar?.visibility = View.GONE
-
-        mHandler = Handler()
-//        mMediaPlayer = MediaPlayer()
 
         setListener()
 
@@ -149,14 +105,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         val mAdapterSongs = AdapterSongs(PlayerConstants.SONG_LIST)
         recyclerViewSongList?.adapter = mAdapterSongs
 
-//        currentSongIndex = SpUtility.getInstance(this)?.getCurrenSongIndex() ?: 0
-
-//        Utilities.setImageByByteArray(this, mArrSongs[currentSongIndex.plus(1)].albumArtByteArray, img_playing_song)
-//        txt_playing_songName?.text = mArrSongs[currentSongIndex.plus(1)].songTitle
-//        imgBtn_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
-//        changeMusicAlbumArt(currentSongIndex)
-//        btn_song_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
-
         mAdapterSongs.onItemClick = { adapterPosition ->
             PlayerConstants.SONG_NUMBER = adapterPosition
             PlayerConstants.SONG_PAUSED = false
@@ -168,7 +116,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
     private fun setListener() {
         try {
             seekBar_play_song?.setOnSeekBarChangeListener(this)
-//            mMediaPlayer?.setOnCompletionListener(this)
 
             imgBtn_play?.setOnClickListener(this)
             btn_song_play?.setOnClickListener(this)
@@ -186,23 +133,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         when (v.id) {
 
             R.id.imgBtn_play -> {
-                musicService?.playMedia()
-                updateUiControls()
-                musicService?.buildNotification()
+                val intent = Intent(ACTION_PLAY)
+                sendBroadcast(intent)
             }
 
             R.id.btn_song_play -> {
-                musicService?.playMedia()
-                updateUiControls()
-                musicService?.buildNotification()
+                val intent = Intent(ACTION_PAUSE)
+                sendBroadcast(intent)
             }
 
             R.id.btn_song_next -> {
-                musicService?.nextMedia()
+                val intent = Intent(ACTION_NEXT)
+                sendBroadcast(intent)
+
 //                updateUiControls()
             }
             R.id.btn_song_previous -> {
-                musicService?.prevMedia()
+                val intent = Intent(ACTION_PREV)
+                sendBroadcast(intent)
+
 //                updateUiControls()
             }
             R.id.btn_song_shuffle_play ->
@@ -251,46 +200,48 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         }
     }
 
-    /**
-     * Update timer on seekbar
-     */
-    private fun updateProgressBar() {
-        mHandler?.postDelayed(mUpdateTimeTask, 100)
-    }
-
     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
 
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar) {
-        mHandler?.removeCallbacks(mUpdateTimeTask)
     }
 
     override fun onStopTrackingTouch(seekBar: SeekBar) {
 
-        mHandler?.removeCallbacks(mUpdateTimeTask)
-
-        musicService?.mMediaPlayer?.let { player ->
+        MusicService.mMediaPlayer?.let { player ->
             val totalDuration = player.duration
             val currentPosition = Utilities.progressToTimer(seekBar.progress, totalDuration)
 
             // forward or backward to certain seconds
             player.seekTo(currentPosition)
-
-            // update timer progress again
-            updateProgressBar()
         }
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onResume() {
         super.onResume()
 
-//        val isServiceRunning = Utilities.isServiceRunning(MusicService::class.java.simpleName,this)
-//        if (serviceBound) {
+        try {
             updateUiControls()
-//        }
+            PlayerConstants.PROGRESSBAR_HANDLER = Handler(Handler.Callback { message ->
+                val longArray = message.obj as LongArray
 
-        updateProgressBar()
+                val currentDuration = longArray[0]
+                val totalDuration = longArray[1]
+                // Displaying Total Duration time
+                txt_song_TotalTime?.text = "" + Utilities.milliSecondsToTimer(totalDuration)
+                // Displaying time completed playing
+                txt_song_Curr_Time?.text = "" + Utilities.milliSecondsToTimer(currentDuration)
+
+                // Updating progress bar
+                val progress = Utilities.getProgressPercentage(currentDuration, totalDuration)
+
+                seekBar_play_song?.progress = progress
+                return@Callback false
+            })
+
+        }catch (ex:Exception) {}
 
     }
 
@@ -304,17 +255,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
         serviceBound = savedInstanceState.getBoolean("ServiceState")
     }
 
-    fun updateUiControls() {
+    private fun updateUiControls() {
         try {
 
-            changeMusicAlbumArt(PlayerConstants.SONG_NUMBER,img_playing_song)
-            changeMusicAlbumArt(PlayerConstants.SONG_NUMBER,img_play_song)
+            changeMusicAlbumArt(img_playing_song)
+            changeMusicAlbumArt(img_play_song)
             txt_playing_songName?.text = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songTitle
 
         } catch (ex:Exception) {
             ex.printStackTrace()
         }
 
+        updateButtons()
+    }
+
+    private fun updateButtons() {
         if (!PlayerConstants.SONG_PAUSED) {
             imgBtn_play?.setImageResource(R.drawable.ic_pause_24dp)
             btn_song_play?.setImageResource(R.drawable.ic_pause_24dp)
@@ -327,16 +282,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
     override fun onCompletion(mp: MediaPlayer) {
     }
 
-    private fun changeMusicAlbumArt(currentSongIndex: Int,imageView: ImageView) {
+    private fun changeMusicAlbumArt(imageView: ImageView) {
         Utilities.setImageByByteArray(this, PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.albumArtByteArray,
                 imageView)
     }
 
     override fun onDestroy() {
-        if (PlayerConstants.SONG_PAUSED && musicService != null) {
+        if (PlayerConstants.SONG_PAUSED) {
 
-            mHandler?.removeCallbacks(mUpdateTimeTask)
-            musicService?.stopSelf()
+            stopService(Intent(this,MusicService::class.java))
+        } else {
             unbindService(serviceConnection)
         }
         super.onDestroy()
@@ -357,13 +312,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
 
             //Service is active
             //Send a broadcast to the service -> Play new Song
-            val broadcastIntent = Intent(ACTION_PLAY)
+            val broadcastIntent = Intent(ACTION_PLAY_NEW_AUDIO)
             sendBroadcast(broadcastIntent)
         }
 
         seekBar_play_song?.progress = 0
         seekBar_play_song?.max = 100
-        updateProgressBar()
     }
 
     override fun onBackPressed() {
@@ -378,9 +332,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCo
     inner class AsyncTaskThread : AsyncTask<Unit, Unit, Unit>() {
 
         override fun doInBackground(vararg p0: Unit?) {
-            val mArrSongs = Utilities.getMp3Songs(this@MainActivity)
+            val mArrSongs = Utilities.getMp3Songs(this@MusicPlayerActivity)
             PlayerConstants.SONG_LIST = mArrSongs
-            SpUtility.getInstance(this@MainActivity)?.storeSongs(mArrSongs)
+            SpUtility.getInstance(this@MusicPlayerActivity)?.storeSongs(mArrSongs)
         }
 
         override fun onPostExecute(result: Unit?) {

@@ -37,7 +37,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun launchMp3Activity() {
-        val mainIntent = Intent(this, MainActivity::class.java)
+        val mainIntent = Intent(this, MusicPlayerActivity::class.java)
         startActivity(mainIntent)
         finish()
     }

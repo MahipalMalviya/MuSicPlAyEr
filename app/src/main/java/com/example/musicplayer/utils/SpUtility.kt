@@ -67,7 +67,7 @@ class SpUtility {
         return sharedPreferences?.getBoolean(SONG_REPEAT, false) ?: false
     }
 
-    fun setSongTotalDuration(totalDuration: Long) {
+    fun setSongTotalDuration(totalDuration: Int) {
         setKeyVal(TOTAL_DURATION,totalDuration)
     }
 
@@ -75,7 +75,7 @@ class SpUtility {
         return sharedPreferences?.getLong(TOTAL_DURATION,0)
     }
 
-    fun setSongCurrentDuration(totalDuration: Long) {
+    fun setSongCurrentDuration(totalDuration: Int) {
         setKeyVal(CURRENT_DURATION,totalDuration)
     }
 
