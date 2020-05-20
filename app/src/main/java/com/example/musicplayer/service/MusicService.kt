@@ -590,12 +590,9 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         getManager()?.notify(NOTIFICATION_ID, notification)
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
     private fun createChannel(): NotificationChannel {
-        val channel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
-        } else {
-            TODO("VERSION.SDK_INT < O")
-        }
+        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
         channel.enableLights(false)
         channel.enableVibration(false)
         channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
