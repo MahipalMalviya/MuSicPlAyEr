@@ -8,6 +8,35 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:215231123558:android:e927bab6948f7f5a285da7",
+        "android_client_info": {
+          "package_name": "com.mahipal.backgroundserviceexample"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "215231123558-d8qqmukp7itkb9hn18prsaf0epdfa1b8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANERs3zPoixMq7Nltwl1wqUItY7lpb3pw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "215231123558-d8qqmukp7itkb9hn18prsaf0epdfa1b8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:215231123558:android:b74724c9e66d506d",
         "android_client_info": {
           "package_name": "com.mahipal.musicplayer"

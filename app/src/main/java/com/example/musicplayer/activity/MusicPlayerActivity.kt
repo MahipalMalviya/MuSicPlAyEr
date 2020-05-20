@@ -331,11 +331,10 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
     }
 
     override fun onDestroy() {
+        unbindService(serviceConnection)
         if (PlayerConstants.SONG_PAUSED) {
 
             stopService(Intent(this, MusicService::class.java))
-        } else {
-            unbindService(serviceConnection)
         }
         super.onDestroy()
     }
