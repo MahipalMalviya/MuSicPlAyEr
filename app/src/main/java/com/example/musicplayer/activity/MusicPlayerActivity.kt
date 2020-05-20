@@ -18,6 +18,7 @@ import com.example.musicplayer.R
 import com.example.musicplayer.adapter.AdapterSongs
 import com.example.musicplayer.constants.PlayerConstants
 import com.example.musicplayer.exception.DefaultExceptionHandler
+import com.example.musicplayer.listeners.OnSwipeTouchListener
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.service.MusicService
 import com.example.musicplayer.utils.SpUtility
@@ -28,7 +29,8 @@ import kotlinx.android.synthetic.main.activity_music_player.*
 import kotlinx.coroutines.*
 
 
-class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
+class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCompletionListener,
+        SeekBar.OnSeekBarChangeListener {
 
     private var serviceBound = false
 
@@ -42,7 +44,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
         const val ACTION_PREV = "com.mahipal.mediaplayer.action.previous"
     }
 
-    private val serviceConnection = object :ServiceConnection {
+    private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName?, service: IBinder?) {
             val binder = service as MusicService.LocalBinder
             musicService = binder.service
@@ -135,6 +137,27 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
     private fun setListener() {
         try {
             seekBar_play_song?.setOnSeekBarChangeListener(this)
+
+            img_play_song?.setOnTouchListener(object :OnSwipeTouchListener(this@MusicPlayerActivity){
+                override fun onSwipeLeft() {
+                    val intent = Intent(ACTION_NEXT)
+                    sendBroadcast(intent)
+                }
+
+                override fun onSwipeRight() {
+                    val intent = Intent(ACTION_PREV)
+                    sendBroadcast(intent)
+                }
+
+                override fun onSwipeTop() {
+
+                }
+
+                override fun onSwipeBottom() {
+
+                }
+
+            })
 
             imgBtn_play?.setOnClickListener(this)
             btn_song_play?.setOnClickListener(this)
@@ -260,12 +283,13 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                 return@Callback false
             })
 
-        }catch (ex:Exception) {}
+        } catch (ex: Exception) {
+        }
 
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean("ServiceState",serviceBound)
+        outState.putBoolean("ServiceState", serviceBound)
         super.onSaveInstanceState(outState)
     }
 
@@ -281,7 +305,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
             changeMusicAlbumArt(img_play_song)
             txt_playing_songName?.text = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songTitle
 
-        } catch (ex:Exception) {
+        } catch (ex: Exception) {
             ex.printStackTrace()
         }
 
@@ -309,14 +333,14 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
     override fun onDestroy() {
         if (PlayerConstants.SONG_PAUSED) {
 
-            stopService(Intent(this,MusicService::class.java))
+            stopService(Intent(this, MusicService::class.java))
         } else {
             unbindService(serviceConnection)
         }
         super.onDestroy()
     }
 
-    private fun playAudio(songIndex:Int) {
+    private fun playAudio(songIndex: Int) {
         //Check is service is active
         if (!serviceBound) {
 
