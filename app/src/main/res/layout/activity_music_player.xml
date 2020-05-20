@@ -55,15 +55,15 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginBottom="24dp"
-                sothree:cardCornerRadius="50dp"
+                sothree:cardCornerRadius="24dp"
                 sothree:cardElevation="8dp">
 
                 <ProgressBar
                     android:id="@+id/progress_bar"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:layout_margin="4dp"
-                    android:indeterminate="false" />
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_margin="8dp"
+                    android:indeterminate="true" />
 
             </androidx.cardview.widget.CardView>
 

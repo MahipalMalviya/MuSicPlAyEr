@@ -17,13 +17,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.musicplayer.R
 import com.example.musicplayer.adapter.AdapterSongs
 import com.example.musicplayer.constants.PlayerConstants
+import com.example.musicplayer.exception.DefaultExceptionHandler
+import com.example.musicplayer.model.Song
 import com.example.musicplayer.service.MusicService
 import com.example.musicplayer.utils.SpUtility
 import com.example.musicplayer.utils.Utilities
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
-import io.fabric.sdk.android.services.concurrency.AsyncTask
 import kotlinx.android.synthetic.main.activity_music_player.*
+import kotlinx.coroutines.*
 
 
 class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
@@ -55,12 +57,19 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        Thread.setDefaultUncaughtExceptionHandler(DefaultExceptionHandler(this))
+        Thread.setDefaultUncaughtExceptionHandler(DefaultExceptionHandler(this))
         setContentView(R.layout.activity_music_player)
 
         setSupportActionBar(toolbar)
 
-        AsyncTaskThread().execute()
+        GlobalScope.launch(Dispatchers.Main + handler) {
+            val songList = fetchSongList()
+
+            PlayerConstants.SONG_LIST = songList
+            SpUtility.getInstance(this@MusicPlayerActivity)?.storeSongs(songList)
+
+            updateUi()
+        }
 
         MusicService.notificationControl = {
             updateUiControls()
@@ -69,6 +78,16 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
         MusicService.updateUiOnMediaAction = {
             updateUiControls()
         }
+    }
+
+    private suspend fun fetchSongList(): ArrayList<Song> {
+        return withContext(Dispatchers.IO + handler) {
+            Utilities.getMp3Songs(this@MusicPlayerActivity)
+        }
+    }
+
+    private val handler = CoroutineExceptionHandler { _, throwable ->
+        throwable.printStackTrace()
     }
 
     private fun updateUi() {
@@ -326,21 +345,6 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
             sliding_layout?.panelState = PanelState.COLLAPSED
         } else {
             super.onBackPressed()
-        }
-    }
-
-    inner class AsyncTaskThread : AsyncTask<Unit, Unit, Unit>() {
-
-        override fun doInBackground(vararg p0: Unit?) {
-            val mArrSongs = Utilities.getMp3Songs(this@MusicPlayerActivity)
-            PlayerConstants.SONG_LIST = mArrSongs
-            SpUtility.getInstance(this@MusicPlayerActivity)?.storeSongs(mArrSongs)
-        }
-
-        override fun onPostExecute(result: Unit?) {
-            super.onPostExecute(result)
-
-            updateUi()
         }
     }
 }

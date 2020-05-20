@@ -106,7 +106,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         }
     }
 
-    private val handler = Handler(Handler.Callback { message ->
+    private val handler = Handler(Handler.Callback { _ ->
         if (mMediaPlayer != null) {
 
             val totalDuration = mMediaPlayer?.duration?.toLong() ?: 0
