@@ -63,7 +63,7 @@ abstract class OnSwipeTouchListener(context: Context): View.OnTouchListener {
 
     abstract fun onSwipeRight()
 
-    abstract fun onSwipeTop()
+    fun onSwipeTop() {}
 
-    abstract fun onSwipeBottom()
+    fun onSwipeBottom() {}
 }

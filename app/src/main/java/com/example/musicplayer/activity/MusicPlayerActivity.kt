@@ -106,10 +106,12 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                         relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent, theme))
                     }
 
-                    imgBtn_play?.visibility = View.INVISIBLE
+                    iv_playlist?.visibility = View.VISIBLE
+                    imgBtn_play?.visibility = View.GONE
                     img_play_song?.scaleType = ImageView.ScaleType.CENTER_CROP
                 }
                 if (slideOffset < 0.09) {
+                    iv_playlist?.visibility = View.GONE
                     imgBtn_play?.visibility = View.VISIBLE
                     img_play_song?.setImageResource(R.drawable.music)
 //                        window.statusBarColor = resources.getColor(R.color.colorPrimaryDark,theme)
@@ -148,14 +150,19 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                     val intent = Intent(ACTION_PREV)
                     sendBroadcast(intent)
                 }
+            })
 
-                override fun onSwipeTop() {
-
+            relativeSlidingLayout?.setOnTouchListener(object : OnSwipeTouchListener(this@MusicPlayerActivity) {
+                override fun onSwipeLeft() {
+                    val intent = Intent(ACTION_NEXT)
+                    sendBroadcast(intent)
                 }
 
-                override fun onSwipeBottom() {
-
+                override fun onSwipeRight() {
+                    val intent = Intent(ACTION_PREV)
+                    sendBroadcast(intent)
                 }
+
 
             })
 
@@ -201,7 +208,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                 if (PlayerConstants.isShuffle) {
                     PlayerConstants.isShuffle = false
                     Toast.makeText(applicationContext, "Shuffle OFF", Toast.LENGTH_SHORT).show()
-                    btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_off_24dp)
+                    btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_off)
                 } else {
 
                     PlayerConstants.isShuffle = true
@@ -212,8 +219,8 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                     PlayerConstants.isRepeat = false
                     SpUtility.getInstance(this)?.setSongRepeat(PlayerConstants.isRepeat)
 
-                    btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_on_24dp)
-                    btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_off_24dp)
+                    btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_on)
+                    btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_off)
                 }
 
             R.id.btn_song_repeat_play ->
@@ -224,7 +231,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                     SpUtility.getInstance(this)?.setSongRepeat(PlayerConstants.isRepeat)
 
                     Toast.makeText(applicationContext, "Repeat OFF", Toast.LENGTH_SHORT).show()
-                    btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_off_24dp)
+                    btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_off)
                 } else {
                     // make repeat to true
                     PlayerConstants.isRepeat = true
@@ -236,8 +243,8 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                     PlayerConstants.isShuffle = false
                     SpUtility.getInstance(this)?.setSongShuffle(PlayerConstants.isShuffle)
 
-                    btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_on_24dp)
-                    btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_off_24dp)
+                    btn_song_repeat_play?.setImageResource(R.drawable.ic_repeat_one_on)
+                    btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_off)
                 }
         }
     }
@@ -314,11 +321,11 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
     private fun updateButtons() {
         if (!PlayerConstants.SONG_PAUSED) {
-            imgBtn_play?.setImageResource(R.drawable.ic_pause_24dp)
-            btn_song_play?.setImageResource(R.drawable.ic_pause_24dp)
+            imgBtn_play?.setImageResource(R.drawable.ic_pause)
+            btn_song_play?.setImageResource(R.drawable.ic_pause)
         } else {
-            imgBtn_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
-            btn_song_play?.setImageResource(R.drawable.ic_play_arrow_24dp)
+            imgBtn_play?.setImageResource(R.drawable.ic_play)
+            btn_song_play?.setImageResource(R.drawable.ic_play)
         }
     }
 
@@ -331,7 +338,9 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
     }
 
     override fun onDestroy() {
-        unbindService(serviceConnection)
+        if (serviceBound) {
+            unbindService(serviceConnection)
+        }
         if (PlayerConstants.SONG_PAUSED) {
 
             stopService(Intent(this, MusicService::class.java))

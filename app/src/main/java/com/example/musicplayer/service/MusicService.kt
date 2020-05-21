@@ -557,11 +557,11 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         notificationCompat.setCustomBigContentView(expandedNotificationView)
 
         if (mMediaPlayer?.isPlaying == true) {
-            notificationCompat.contentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause_24dp)
-            notificationCompat.bigContentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause_24dp)
+            notificationCompat.contentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause)
+            notificationCompat.bigContentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause)
         } else {
-            notificationCompat.contentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play_arrow_24dp)
-            notificationCompat.bigContentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play_arrow_24dp)
+            notificationCompat.contentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play)
+            notificationCompat.bigContentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play)
         }
 
         notificationCompat.contentView.setTextViewText(R.id.status_bar_track_name, songTitle)

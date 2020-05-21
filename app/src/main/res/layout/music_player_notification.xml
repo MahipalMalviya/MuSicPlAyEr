@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="16dp">
 
     <ImageView
         android:id="@+id/status_bar_album_art"
@@ -35,7 +35,7 @@
             android:id="@+id/status_bar_track_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             android:textSize="16sp"
             android:ellipsize="marquee"
             android:singleLine="true"
@@ -52,23 +52,30 @@
 
     <ImageView
         android:id="@+id/status_bar_prev"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@drawable/ic_play_previous_24dp"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginEnd="4dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_previous"
         android:contentDescription="@string/cd_play" />
 
     <ImageView
         android:id="@+id/status_bar_play"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@drawable/ic_play_arrow_24dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_play"
         android:contentDescription="@string/cd_next" />
 
     <ImageView
         android:id="@+id/status_bar_next"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@drawable/ic_play_next_24dp"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_next"
+        android:layout_marginStart="4dp"
         android:contentDescription="@string/cd_next"/>
 
 </LinearLayout>

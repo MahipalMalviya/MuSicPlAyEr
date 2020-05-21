@@ -112,16 +112,27 @@
                 android:text="song_name"
                 android:textSize="16sp" />
 
+            <ImageView
+                android:id="@+id/iv_playlist"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                android:src="@drawable/ic_queue"
+                android:visibility="gone" />
+
             <ImageButton
                 android:id="@+id/imgBtn_play"
                 android:layout_width="58dp"
                 android:layout_height="58dp"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_marginTop="10dp"
-                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
                 android:layout_marginBottom="18dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_play_arrow_24dp" />
+                android:src="@drawable/ic_play" />
 
         </RelativeLayout>
 
@@ -147,8 +158,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_centerInParent="true"
-                    android:src="@drawable/music"
-                    android:scaleType="fitXY" />
+                    android:scaleType="fitXY"
+                    android:src="@drawable/music" />
 
                 <ImageButton
                     android:id="@+id/btn_song_shuffle_play"
@@ -157,7 +168,7 @@
                     android:layout_alignParentBottom="true"
                     android:layout_margin="25dp"
                     android:background="@android:color/transparent"
-                    android:src="@drawable/ic_shuffle_off_24dp" />
+                    android:src="@drawable/ic_shuffle_off" />
 
                 <ImageButton
                     android:id="@+id/btn_song_repeat_play"
@@ -167,7 +178,7 @@
                     android:layout_alignParentBottom="true"
                     android:layout_margin="25dp"
                     android:background="@android:color/transparent"
-                    android:src="@drawable/ic_repeat_off_24dp" />
+                    android:src="@drawable/ic_repeat_off" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -206,7 +217,7 @@
                     android:layout_centerHorizontal="true"
                     android:layout_marginTop="20dp"
                     android:background="@android:color/transparent"
-                    android:src="@drawable/ic_play_arrow_24dp" />
+                    android:src="@drawable/ic_play" />
 
                 <ImageButton
                     android:id="@+id/btn_song_next"
@@ -216,7 +227,7 @@
                     android:layout_marginTop="30dp"
                     android:layout_toRightOf="@+id/btn_song_play"
                     android:background="@android:color/transparent"
-                    android:src="@drawable/ic_play_next_24dp" />
+                    android:src="@drawable/ic_next" />
 
                 <ImageButton
                     android:id="@+id/btn_song_previous"
@@ -226,7 +237,7 @@
                     android:layout_marginEnd="15dp"
                     android:layout_toLeftOf="@+id/btn_song_play"
                     android:background="@android:color/transparent"
-                    android:src="@drawable/ic_play_previous_24dp" />
+                    android:src="@drawable/ic_previous" />
             </RelativeLayout>
         </RelativeLayout>
     </LinearLayout>
