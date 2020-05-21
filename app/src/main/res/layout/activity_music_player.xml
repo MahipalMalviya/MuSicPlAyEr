@@ -153,6 +153,13 @@
                 android:layout_above="@+id/relative"
                 android:background="@color/grey_color">
 
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_playlist_queue"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:listitem="@layout/current_play_list"
+                    android:visibility="gone"/>
+
                 <ImageView
                     android:id="@+id/img_play_song"
                     android:layout_width="match_parent"

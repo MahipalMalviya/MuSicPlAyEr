@@ -13,9 +13,12 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
 import com.example.musicplayer.adapter.AdapterSongs
+import com.example.musicplayer.adapter.PlaylistQueueAdapter
 import com.example.musicplayer.constants.PlayerConstants
 import com.example.musicplayer.exception.DefaultExceptionHandler
 import com.example.musicplayer.listeners.OnSwipeTouchListener
@@ -35,6 +38,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
     private var serviceBound = false
 
     private var musicService: MusicService? = null
+    private var isPlaylistQueueVisible = false
 
     companion object {
         const val ACTION_PLAY_NEW_AUDIO = "com.mahipal.mediaplayer.action.playNewAudio"
@@ -70,7 +74,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
             PlayerConstants.SONG_LIST = songList
             SpUtility.getInstance(this@MusicPlayerActivity)?.storeSongs(songList)
 
-            updateUi()
+            updateUi(songList)
         }
 
         MusicService.notificationControl = {
@@ -92,7 +96,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
         throwable.printStackTrace()
     }
 
-    private fun updateUi() {
+    private fun updateUi(songList: ArrayList<Song>) {
         cv_progress_bar?.visibility = View.GONE
 
         setListener()
@@ -125,7 +129,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
         recyclerViewSongList?.layoutManager = LinearLayoutManager(
                 this, LinearLayoutManager.VERTICAL, false)
-        val mAdapterSongs = AdapterSongs(PlayerConstants.SONG_LIST)
+        val mAdapterSongs = AdapterSongs(songList)
         recyclerViewSongList?.adapter = mAdapterSongs
 
         mAdapterSongs.onItemClick = { adapterPosition ->
@@ -166,6 +170,7 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
             })
 
+            iv_playlist?.setOnClickListener(this)
             imgBtn_play?.setOnClickListener(this)
             btn_song_play?.setOnClickListener(this)
             btn_song_next?.setOnClickListener(this)
@@ -202,6 +207,17 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                 sendBroadcast(intent)
 
 //                updateUiControls()
+            }
+            R.id.iv_playlist -> {
+                if (!isPlaylistQueueVisible) {
+
+                    isPlaylistQueueVisible = true
+                    loadPlaylistQueue()
+                } else {
+
+                    isPlaylistQueueVisible = false
+                    rv_playlist_queue.visibility = View.GONE
+                }
             }
             R.id.btn_song_shuffle_play ->
 
@@ -247,6 +263,57 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
                     btn_song_shuffle_play?.setImageResource(R.drawable.ic_shuffle_off)
                 }
         }
+    }
+
+    private fun loadPlaylistQueue() {
+        rv_playlist_queue.visibility = View.VISIBLE
+        rv_playlist_queue.layoutManager = LinearLayoutManager(this,RecyclerView.VERTICAL,false)
+        val playlistQueueAdapter = PlaylistQueueAdapter(PlayerConstants.SONG_LIST)
+        rv_playlist_queue.adapter = playlistQueueAdapter
+
+        itemTouchHelper.attachToRecyclerView(rv_playlist_queue)
+
+        playlistQueueAdapter.onTouchStartDragging = { viewHolder ->
+            itemTouchHelper.startDrag(viewHolder)
+        }
+    }
+
+    private val itemTouchHelper by lazy {
+        val itemTouchCallback = object :ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or
+                                                                                ItemTouchHelper.DOWN or
+                                                                                ItemTouchHelper.START or
+                                                                                ItemTouchHelper.END,0) {
+
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                val adapter = recyclerView.adapter as PlaylistQueueAdapter
+                val from = viewHolder.adapterPosition
+                val to = viewHolder.adapterPosition
+
+                adapter.moveItem(from,to)
+                adapter.notifyItemMoved(from,to)
+                return true
+            }
+
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
+
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                    viewHolder?.itemView?.alpha = 0.5f
+                }
+            }
+
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+                super.clearView(recyclerView, viewHolder)
+
+                viewHolder?.itemView?.alpha = 1f
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+
+            }
+
+        }
+        ItemTouchHelper(itemTouchCallback)
     }
 
     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {

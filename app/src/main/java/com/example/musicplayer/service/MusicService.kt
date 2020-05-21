@@ -127,11 +127,8 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
 
         try {
-            songList = SpUtility.getInstance(applicationContext)?.getSongs()
-            songIndex = SpUtility.getInstance(applicationContext)?.getCurrentSongIndex() ?: 0
-
-            PlayerConstants.SONG_NUMBER = songIndex
-            PlayerConstants.SONG_LIST = songList
+            songList = PlayerConstants.SONG_LIST
+            songIndex = PlayerConstants.SONG_NUMBER
 
             if (songIndex != -1 && songIndex < songList?.size ?: 0) {
                 activeSong = songList?.get(songIndex)
