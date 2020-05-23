@@ -1,19 +1,21 @@
 package com.example.musicplayer.adapter
 
 import android.annotation.SuppressLint
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
+import com.example.musicplayer.constants.PlayerConstants
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.utils.Utilities
 import kotlinx.android.synthetic.main.current_play_list.view.*
 import java.util.*
 import kotlin.collections.ArrayList
 
-class PlaylistQueueAdapter(private val list:ArrayList<Song>?): RecyclerView.Adapter<PlaylistQueueAdapter.PlayListHolder>() {
+class PlaylistQueueAdapter(private var list:ArrayList<Song>?): RecyclerView.Adapter<PlaylistQueueAdapter.PlayListHolder>() {
 
     var onTouchStartDragging: ((RecyclerView.ViewHolder) -> Unit)? = null
 
@@ -33,12 +35,24 @@ class PlaylistQueueAdapter(private val list:ArrayList<Song>?): RecyclerView.Adap
             if (motionEvent.actionMasked == MotionEvent.ACTION_DOWN) {
                 onTouchStartDragging?.invoke(holder)
             }
-            return@setOnTouchListener true
+            return@setOnTouchListener false
         }
     }
 
     fun moveItem(fromPosition: Int, toPosition: Int) {
+        if (PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songTitle?.equals(
+                        PlayerConstants.SONG_LIST?.get(fromPosition)?.songTitle) == true) {
+
+            PlayerConstants.SONG_NUMBER = toPosition
+
+        } else if (PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songTitle?.equals(
+                        PlayerConstants.SONG_LIST?.get(toPosition)?.songTitle) == true) {
+
+            PlayerConstants.SONG_NUMBER = fromPosition
+        }
         Collections.swap(list as MutableList<*>,fromPosition,toPosition)
+        notifyItemMoved(fromPosition,toPosition)
+        PlayerConstants.SONG_LIST = list
     }
 
     inner class PlayListHolder(itemView:View):RecyclerView.ViewHolder(itemView) {
@@ -63,6 +77,12 @@ class PlaylistQueueAdapter(private val list:ArrayList<Song>?): RecyclerView.Adap
                 itemView.tv_playlist_song_duration.text = "0$minutes:0$seconds"
             } else {
                 itemView.tv_playlist_song_duration.text = "0$minutes:$seconds"
+            }
+
+            if (PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songTitle?.equals(song?.songTitle) == true) {
+                itemView.tv_playlist_song_name.typeface = Typeface.DEFAULT_BOLD
+            } else {
+                itemView.tv_playlist_song_name.typeface = Typeface.DEFAULT
             }
         }
     }

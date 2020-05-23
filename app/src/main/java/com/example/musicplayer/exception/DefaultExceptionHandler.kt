@@ -8,6 +8,7 @@ import android.content.Intent
 import android.util.Log
 import com.crashlytics.android.Crashlytics
 import com.example.musicplayer.activity.SplashActivity
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlin.system.exitProcess
 
 class DefaultExceptionHandler(private val activity: Activity): Thread.UncaughtExceptionHandler {
@@ -20,6 +21,8 @@ class DefaultExceptionHandler(private val activity: Activity): Thread.UncaughtEx
         ex.printStackTrace()
 
         Crashlytics.logException(ex)
+        FirebaseCrashlytics.getInstance().sendUnsentReports()
+
         val intent = Intent(activity, SplashActivity::class.java)
 
         intent.putExtra("crash", true)

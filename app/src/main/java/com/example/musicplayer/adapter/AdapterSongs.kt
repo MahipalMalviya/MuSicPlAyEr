@@ -1,6 +1,7 @@
 package com.example.musicplayer.adapter
 
 import android.annotation.SuppressLint
+import android.graphics.Typeface
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.example.musicplayer.R
+import com.example.musicplayer.constants.PlayerConstants
 import com.example.musicplayer.model.Song
 import java.util.ArrayList
 import kotlinx.android.synthetic.main.item_song_list.view.*
@@ -62,6 +64,12 @@ class AdapterSongs(private val mArrSong: ArrayList<Song>?) :
                     .placeholder(R.drawable.music)
                     .into(itemView.img_song)
 
+            if (PlayerConstants.SONG_NUMBER != -1 && PlayerConstants.SONG_LIST?.
+                            get(PlayerConstants.SONG_NUMBER)?.songTitle?.equals(song?.songTitle) == true) {
+                itemView.txt_songName.typeface = Typeface.DEFAULT_BOLD
+            } else {
+                itemView.txt_songName.typeface = Typeface.DEFAULT
+            }
         }
 
         init {

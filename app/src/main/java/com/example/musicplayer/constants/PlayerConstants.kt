@@ -8,7 +8,7 @@ object PlayerConstants {
     var SONG_LIST : ArrayList<Song>? = null
 
     //song number which is playing right now from SONGS_LIST
-    var SONG_NUMBER = 0
+    var SONG_NUMBER = -1
 
     //song is playing or paused
     var SONG_PAUSED = true

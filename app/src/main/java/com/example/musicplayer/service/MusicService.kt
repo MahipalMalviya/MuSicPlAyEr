@@ -40,8 +40,6 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
 
     private var timer: Timer? = null
 
-    private var songList: ArrayList<Song>? = null
-    private var songIndex = -1
     private var activeSong: Song? = null
     private var notificationManager: NotificationManager? = null
 
@@ -106,7 +104,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         }
     }
 
-    private val handler = Handler(Handler.Callback { _ ->
+    private val handler = Handler(Handler.Callback {
         if (mMediaPlayer != null) {
 
             val totalDuration = mMediaPlayer?.duration?.toLong() ?: 0
@@ -127,8 +125,8 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
 
         try {
-            songList = PlayerConstants.SONG_LIST
-            songIndex = PlayerConstants.SONG_NUMBER
+            val songList = PlayerConstants.SONG_LIST
+            val songIndex = PlayerConstants.SONG_NUMBER
 
             if (songIndex != -1 && songIndex < songList?.size ?: 0) {
                 activeSong = songList?.get(songIndex)
@@ -140,7 +138,11 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
             stopSelf()
         }
 
-        if (mediaSessionManager == null) {
+//        PlayerConstants.SONG_LIST_UPDATE_HANDLER = Handler(Handler.Callback {
+//            return@Callback true
+//        })
+
+//        if (mediaSessionManager == null) {
             try {
 //                initMediaSession()
                 initMediaPlayer()
@@ -148,8 +150,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
                 e.printStackTrace()
                 stopSelf()
             }
-
-        }
+//        }
 
         return START_STICKY
     }
@@ -284,34 +285,32 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     }
 
     override fun nextMedia() {
-        if (songIndex == songList?.size?.minus(1)) {
+        if (PlayerConstants.SONG_NUMBER == PlayerConstants.SONG_LIST?.size?.minus(1)) {
             //if last in playlist
-            songIndex = 0
-            activeSong = songList?.get(songIndex)
+            PlayerConstants.SONG_NUMBER = 0
+            activeSong = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)
         } else {
             //get next song
-            activeSong = songList?.get(++songIndex)
+            activeSong = PlayerConstants.SONG_LIST?.get(++PlayerConstants.SONG_NUMBER)
         }
 
-        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(songIndex)
-        PlayerConstants.SONG_NUMBER = songIndex
+        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(PlayerConstants.SONG_NUMBER)
 
         initMediaPlayer()
     }
 
     override fun prevMedia() {
-        if (songIndex == 0) {
+        if (PlayerConstants.SONG_NUMBER == 0) {
             //if first in playlist
             //set index to the last of audioList
-            songIndex = songList?.size?.minus(1) ?: 0
-            activeSong = songList?.get(songIndex)
+            PlayerConstants.SONG_NUMBER = PlayerConstants.SONG_LIST?.size?.minus(1)?:0
+            activeSong = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)
         } else {
             //get previous in playlist
-            activeSong = songList?.get(--songIndex)
+            activeSong = PlayerConstants.SONG_LIST?.get(--PlayerConstants.SONG_NUMBER)
         }
 
-        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(songIndex)
-        PlayerConstants.SONG_NUMBER = songIndex
+        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(PlayerConstants.SONG_NUMBER)
 
         initMediaPlayer()
     }
@@ -319,9 +318,9 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     override fun shuffleMedia() {
         // get random song position
         val rand = Random()
-        songIndex = rand.nextInt(songList?.size ?: 0 - 1 + 1)
+        val songIndex = rand.nextInt(PlayerConstants.SONG_LIST?.size?:0 - 1 + 1)
 
-        activeSong = songList?.get(songIndex)
+        activeSong = PlayerConstants.SONG_LIST?.get(songIndex)
 
         SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(songIndex)
         PlayerConstants.SONG_NUMBER = songIndex
@@ -332,9 +331,8 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     override fun repeatMedia() {
         // repeat same song again
 
-        activeSong = songList?.get(songIndex)
-        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(songIndex)
-        PlayerConstants.SONG_NUMBER = songIndex
+        activeSong = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)
+        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(PlayerConstants.SONG_NUMBER)
 
         initMediaPlayer()
     }
@@ -352,12 +350,9 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         when {
             playerAction?.equals(MusicPlayerActivity.ACTION_PLAY_NEW_AUDIO, true) == true -> {
 
-                songIndex = SpUtility.getInstance(applicationContext)?.getCurrentSongIndex() ?: 0
-                PlayerConstants.SONG_NUMBER = songIndex
-
-                if (songIndex != -1 && songIndex < songList?.size ?: 0) {
+                if (PlayerConstants.SONG_NUMBER != -1 && PlayerConstants.SONG_NUMBER < PlayerConstants.SONG_LIST?.size?:0) {
                     //index is in a valid range
-                    activeSong = songList?.get(songIndex)
+                    activeSong = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)
                 } else {
                     stopSelf()
                 }
@@ -518,9 +513,9 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     }
 
     fun buildNotification() {
-        val songTitle = songList?.get(songIndex)?.songTitle
-        val songArtist = songList?.get(songIndex)?.songArtist
-        val albumName = songList?.get(songIndex)?.album
+        val songTitle = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songTitle
+        val songArtist = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songArtist
+        val albumName = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.album
 
         val smallNotificationView = RemoteViews(applicationContext.packageName, R.layout.music_player_notification)
         val expandedNotificationView = RemoteViews(applicationContext.packageName, R.layout.music_player_notification_expanded)
@@ -536,7 +531,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         attachPendingIntent(smallNotificationView)
         attachPendingIntent(expandedNotificationView)
 
-        songList?.get(songIndex)?.albumArtByteArray?.let { bytes ->
+        PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.albumArtByteArray?.let { bytes ->
             notificationCompat.contentView.setImageViewBitmap(R.id.status_bar_album_art,
                     Utilities.getBitmapFromByteArray(bytes))
 

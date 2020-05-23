@@ -146,19 +146,49 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <LinearLayout
+                android:id="@+id/ll_playlist_queue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/relative"
+                android:layout_alignParentTop="true"
+                android:orientation="vertical"
+                android:background="#CECECE"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/playlist_background"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:text="@string/now_playing"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_playlist_queue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#CECECE"
+                    app:listitem="@layout/current_play_list" />
+
+            </LinearLayout>
+
             <RelativeLayout
                 android:id="@+id/rl_media_shuffle"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/relative"
                 android:background="@color/grey_color">
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rv_playlist_queue"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:listitem="@layout/current_play_list"
-                    android:visibility="gone"/>
 
                 <ImageView
                     android:id="@+id/img_play_song"
@@ -230,7 +260,7 @@
                     android:id="@+id/btn_song_next"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:layout_marginLeft="15dp"
+                    android:layout_marginStart="15dp"
                     android:layout_marginTop="30dp"
                     android:layout_toRightOf="@+id/btn_song_play"
                     android:background="@android:color/transparent"
@@ -245,6 +275,16 @@
                     android:layout_toLeftOf="@+id/btn_song_play"
                     android:background="@android:color/transparent"
                     android:src="@drawable/ic_previous" />
+
+                <ImageButton
+                    android:id="@+id/ib_favourite_song"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="30dp"
+                    android:layout_toRightOf="@+id/btn_song_next"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/ic_not_favorite" />
             </RelativeLayout>
         </RelativeLayout>
     </LinearLayout>

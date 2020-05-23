@@ -38,7 +38,10 @@ class SpUtility {
         return sharedPreferences?.getInt(SONG_INDEX, 0) ?: 0
     }
 
-    fun storeSongs(songList: ArrayList<Song>) {
+    fun storeSongs(songList: ArrayList<Song>?) {
+        if (songList == null) {
+            return
+        }
         val json = Gson().toJson(songList)
         sharedPreferences?.edit()?.putString(SONG_LIST, json)?.apply()
     }
