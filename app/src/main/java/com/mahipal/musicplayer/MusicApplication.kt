@@ -1,4 +1,4 @@
-package com.example.musicplayer
+package com.mahipal.musicplayer
 
 import android.app.Application
 import com.crashlytics.android.Crashlytics

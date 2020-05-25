@@ -1,4 +1,4 @@
-package com.example.musicplayer.callbacks
+package com.mahipal.musicplayer.callbacks
 
 interface MediaPlayerControls {
 

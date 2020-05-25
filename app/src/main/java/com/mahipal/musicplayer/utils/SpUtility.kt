@@ -1,8 +1,8 @@
-package com.example.musicplayer.utils
+package com.mahipal.musicplayer.utils
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.example.musicplayer.model.Song
+import com.mahipal.musicplayer.model.Song
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 

@@ -1,4 +1,4 @@
-package com.example.musicplayer.exception
+package com.mahipal.musicplayer.exception
 
 import android.app.Activity
 import android.app.AlarmManager
@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.crashlytics.android.Crashlytics
-import com.example.musicplayer.activity.SplashActivity
+import com.mahipal.musicplayer.activity.SplashActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlin.system.exitProcess
 

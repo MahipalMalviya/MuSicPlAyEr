@@ -1,4 +1,4 @@
-package com.example.musicplayer.activity
+package com.mahipal.musicplayer.activity
 
 
 import android.annotation.SuppressLint
@@ -16,16 +16,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.R
-import com.example.musicplayer.adapter.AdapterSongs
-import com.example.musicplayer.adapter.PlaylistQueueAdapter
-import com.example.musicplayer.constants.PlayerConstants
-import com.example.musicplayer.exception.DefaultExceptionHandler
-import com.example.musicplayer.listeners.OnSwipeTouchListener
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.service.MusicService
-import com.example.musicplayer.utils.SpUtility
-import com.example.musicplayer.utils.Utilities
+import com.mahipal.musicplayer.R
+import com.mahipal.musicplayer.adapter.AdapterSongs
+import com.mahipal.musicplayer.adapter.PlaylistQueueAdapter
+import com.mahipal.musicplayer.constants.PlayerConstants
+import com.mahipal.musicplayer.exception.DefaultExceptionHandler
+import com.mahipal.musicplayer.listeners.OnSwipeTouchListener
+import com.mahipal.musicplayer.model.Song
+import com.mahipal.musicplayer.service.MusicService
+import com.mahipal.musicplayer.utils.SpUtility
+import com.mahipal.musicplayer.utils.Utilities
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
 import kotlinx.android.synthetic.main.activity_music_player.*
@@ -71,6 +71,10 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
         setSupportActionBar(toolbar)
 
+        if (PlayerConstants.SONG_NUMBER == -1) {
+            sliding_layout?.isTouchEnabled = false
+        }
+
         GlobalScope.launch(Dispatchers.Main + handler) {
             val songList = fetchSongList()
             SpUtility.getInstance(this@MusicPlayerActivity)?.storeSongs(songList)
@@ -111,14 +115,14 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
                 if (slideOffset > 0.88) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent, theme))
+                        relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent,theme))
+                    } else {
+                        relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent))
                     }
-
                     iv_playlist?.visibility = View.VISIBLE
                     imgBtn_play?.visibility = View.GONE
                     img_play_song?.scaleType = ImageView.ScaleType.CENTER_CROP
-                }
-                if (slideOffset < 0.09) {
+                } else if (slideOffset < 0.09) {
                     iv_playlist?.visibility = View.GONE
                     imgBtn_play?.visibility = View.VISIBLE
                     img_play_song?.setImageResource(R.drawable.music)
@@ -139,6 +143,11 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
         mAdapterSongs?.onItemClick = { adapterPosition ->
             PlayerConstants.SONG_NUMBER = adapterPosition
             PlayerConstants.SONG_PAUSED = false
+
+            if (PlayerConstants.SONG_NUMBER != -1) {
+                sliding_layout?.isTouchEnabled = true
+            }
+
             playAudio(adapterPosition)
             updateUiControls()
         }

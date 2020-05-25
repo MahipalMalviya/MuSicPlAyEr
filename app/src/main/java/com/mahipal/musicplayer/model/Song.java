@@ -1,6 +1,4 @@
-package com.example.musicplayer.model;
-
-import androidx.annotation.NonNull;
+package com.mahipal.musicplayer.model;
 
 import java.io.Serializable;
 import java.util.Arrays;

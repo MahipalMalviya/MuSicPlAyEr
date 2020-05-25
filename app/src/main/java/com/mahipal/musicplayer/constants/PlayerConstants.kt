@@ -1,7 +1,7 @@
-package com.example.musicplayer.constants
+package com.mahipal.musicplayer.constants
 
 import android.os.Handler
-import com.example.musicplayer.model.Song
+import com.mahipal.musicplayer.model.Song
 
 object PlayerConstants {
 

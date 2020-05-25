@@ -1,4 +1,4 @@
-package com.example.musicplayer.adapter
+package com.mahipal.musicplayer.adapter
 
 import android.annotation.SuppressLint
 import android.graphics.Typeface
@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
-import com.example.musicplayer.R
-import com.example.musicplayer.constants.PlayerConstants
-import com.example.musicplayer.model.Song
+import com.mahipal.musicplayer.R
+import com.mahipal.musicplayer.constants.PlayerConstants
+import com.mahipal.musicplayer.model.Song
 import java.util.ArrayList
 import kotlinx.android.synthetic.main.item_song_list.view.*
 

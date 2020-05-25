@@ -10,13 +10,18 @@ android {
         applicationId 'com.mahipal.musicplayer'
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.5.1"
+        versionCode 100000001
+        versionName "1.05.01"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
             debuggable false
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

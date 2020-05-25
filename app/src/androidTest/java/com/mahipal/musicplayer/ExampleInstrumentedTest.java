@@ -1,4 +1,4 @@
-package com.example.musicplayer;
+package com.mahipal.musicplayer;
 
 import android.content.Context;
 import androidx.test.platform.app.InstrumentationRegistry;

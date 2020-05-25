@@ -1,4 +1,4 @@
-package com.example.musicplayer.service
+package com.mahipal.musicplayer.service
 
 import android.annotation.TargetApi
 import android.app.*
@@ -19,13 +19,13 @@ import android.util.Log
 import android.view.KeyEvent
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import com.example.musicplayer.R
-import com.example.musicplayer.activity.MusicPlayerActivity
-import com.example.musicplayer.callbacks.MediaPlayerControls
-import com.example.musicplayer.constants.PlayerConstants
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.utils.SpUtility
-import com.example.musicplayer.utils.Utilities
+import com.mahipal.musicplayer.R
+import com.mahipal.musicplayer.activity.MusicPlayerActivity
+import com.mahipal.musicplayer.callbacks.MediaPlayerControls
+import com.mahipal.musicplayer.constants.PlayerConstants
+import com.mahipal.musicplayer.model.Song
+import com.mahipal.musicplayer.utils.SpUtility
+import com.mahipal.musicplayer.utils.Utilities
 import java.util.*
 
 
@@ -87,6 +87,8 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         // Manage incoming phone calls during playback.
         // Pause MediaPlayer on incoming call,
         // Resume on hangup.
+        requestAudioFocus()
+
         callStateListener()
         //ACTION_AUDIO_BECOMING_NOISY -- change in audio outputs -- BroadcastReceiver
         reqisterNoisyReceiver()

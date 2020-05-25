@@ -1,4 +1,4 @@
-package com.example.musicplayer.utils
+package com.mahipal.musicplayer.utils
 
 import android.app.Activity
 import android.app.ActivityManager
@@ -11,8 +11,8 @@ import com.google.android.material.snackbar.Snackbar
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
-import com.example.musicplayer.R
-import com.example.musicplayer.model.Song
+import com.mahipal.musicplayer.R
+import com.mahipal.musicplayer.model.Song
 import java.util.ArrayList
 
 /**

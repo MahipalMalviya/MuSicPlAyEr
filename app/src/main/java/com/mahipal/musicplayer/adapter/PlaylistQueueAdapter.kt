@@ -1,4 +1,4 @@
-package com.example.musicplayer.adapter
+package com.mahipal.musicplayer.adapter
 
 import android.annotation.SuppressLint
 import android.graphics.Typeface
@@ -7,10 +7,10 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.R
-import com.example.musicplayer.constants.PlayerConstants
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.utils.Utilities
+import com.mahipal.musicplayer.R
+import com.mahipal.musicplayer.constants.PlayerConstants
+import com.mahipal.musicplayer.model.Song
+import com.mahipal.musicplayer.utils.Utilities
 import kotlinx.android.synthetic.main.current_play_list.view.*
 import java.util.*
 import kotlin.collections.ArrayList
