@@ -89,7 +89,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         // Resume on hangup.
         requestAudioFocus()
 
-        callStateListener()
+//        callStateListener()
         //ACTION_AUDIO_BECOMING_NOISY -- change in audio outputs -- BroadcastReceiver
         reqisterNoisyReceiver()
 
@@ -635,9 +635,9 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
 
         removeAudioFocus()
         //Disable the PhoneStateListener
-        if (phoneStateListener != null) {
-            telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
-        }
+//        if (phoneStateListener != null) {
+//            telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
+//        }
 
         //unregister Noisy BroadcastReceivers
         unregisterReceiver(becomingNoisyReceiver)
