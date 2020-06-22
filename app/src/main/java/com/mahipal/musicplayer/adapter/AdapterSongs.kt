@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide
 import com.mahipal.musicplayer.R
 import com.mahipal.musicplayer.constants.PlayerConstants
 import com.mahipal.musicplayer.model.Song
+import com.mahipal.musicplayer.utils.Utilities
 import java.util.ArrayList
 import kotlinx.android.synthetic.main.item_song_list.view.*
 
@@ -59,8 +60,9 @@ class AdapterSongs(private val mArrSong: ArrayList<Song>?) :
                 itemView.txt_songDuration.text = "0$minutes:$seconds"
             }
 
+            val bitmap = Utilities.getAlbumart(itemView.context,song?.albumId)
             Glide.with(itemView.context)
-                    .load(song?.albumArtByteArray)
+                    .load(bitmap)
                     .placeholder(R.drawable.music)
                     .into(itemView.img_song)
 

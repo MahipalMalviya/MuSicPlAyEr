@@ -1,5 +1,7 @@
 package com.mahipal.musicplayer.model;
 
+import android.graphics.Bitmap;
+
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -15,9 +17,9 @@ public class Song implements Serializable{
     private String minute;
     private String second;
     private String album;
-    private byte[] albumArtByteArray;
+    private long albumId;
 
-    public Song(long songId, String songTitle, String songArtist, String path, String minute,String second, String album, byte[] albumArtByteArray) {
+    public Song(long songId, String songTitle, String songArtist, String path, String minute,String second, String album, long albumId) {
         this.songId = songId;
         this.songTitle = songTitle;
         this.songArtist = songArtist;
@@ -25,7 +27,7 @@ public class Song implements Serializable{
         this.minute = minute;
         this.second = second;
         this.album = album;
-        this.albumArtByteArray = albumArtByteArray;
+        this.albumId = albumId;
     }
 
     public String getMinute() {
@@ -84,12 +86,12 @@ public class Song implements Serializable{
         this.album = album;
     }
 
-    public byte[] getAlbumArtByteArray() {
-        return albumArtByteArray;
+    public long getAlbumId() {
+        return albumId;
     }
 
-    public void setAlbumArtByteArray(byte[] albumArtByteArray) {
-        this.albumArtByteArray = albumArtByteArray;
+    public void setAlbumId(long albumId) {
+        this.albumId = albumId;
     }
 
     @Override
@@ -102,7 +104,7 @@ public class Song implements Serializable{
                 ", minute='" + minute + '\'' +
                 ", second='" + second + '\'' +
                 ", album='" + album + '\'' +
-                ", albumArtByteArray=" + Arrays.toString(albumArtByteArray) +
+                ", albumId=" + albumId +
                 '}';
     }
 }

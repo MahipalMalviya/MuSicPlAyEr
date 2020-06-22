@@ -24,6 +24,8 @@ import com.mahipal.musicplayer.activity.MusicPlayerActivity
 import com.mahipal.musicplayer.callbacks.MediaPlayerControls
 import com.mahipal.musicplayer.constants.PlayerConstants
 import com.mahipal.musicplayer.model.Song
+import com.mahipal.musicplayer.utils.Controls
+import com.mahipal.musicplayer.utils.NotifyUtils
 import com.mahipal.musicplayer.utils.SpUtility
 import com.mahipal.musicplayer.utils.Utilities
 import java.util.*
@@ -43,16 +45,16 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     private var activeSong: Song? = null
     private var notificationManager: NotificationManager? = null
 
-    //MediaSession
-    private val mediaSessionManager: MediaSessionManager? = null
-    private val mediaSession: MediaSessionCompat? = null
-    private val transportControls: MediaControllerCompat.TransportControls? = null
-    private var audioManager: AudioManager? = null
+//    //MediaSession
+//    private val mediaSessionManager: MediaSessionManager? = null
+//    private val mediaSession: MediaSessionCompat? = null
+//    private val transportControls: MediaControllerCompat.TransportControls? = null
+//    private var audioManager: AudioManager? = null
 
     //Handle incoming phone calls
-    private var ongoingCall = false
-    private var phoneStateListener: PhoneStateListener? = null
-    private var telephonyManager: TelephonyManager? = null
+//    private var ongoingCall = false
+//    private var phoneStateListener: PhoneStateListener? = null
+//    private var telephonyManager: TelephonyManager? = null
 
     companion object {
         var notificationControl: ((String) -> Unit)? = null
@@ -81,17 +83,28 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     override fun onCreate() {
         super.onCreate()
 
+        val notification = NotifyUtils.getNotification(this, CHANNEL_ID)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotifyUtils.addChannel(this, CHANNEL_ID, CHANNEL_NAME)
+            startForeground(NOTIFICATION_ID,notification.build())
+        } else {
+            startForeground(NOTIFICATION_ID,notification.build())
+        }
+
         mMediaPlayer = MediaPlayer()
         timer = Timer()
+
+        mMediaPlayer?.setOnCompletionListener(this)
+        mMediaPlayer?.setOnPreparedListener(this)
 
         // Manage incoming phone calls during playback.
         // Pause MediaPlayer on incoming call,
         // Resume on hangup.
-        requestAudioFocus()
+//        requestAudioFocus()
 
 //        callStateListener()
         //ACTION_AUDIO_BECOMING_NOISY -- change in audio outputs -- BroadcastReceiver
-        reqisterNoisyReceiver()
+//        reqisterNoisyReceiver()
 
         //register player control broadcast receiver
         registerPlayerControlsBroadCastReceiver()
@@ -125,6 +138,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     })
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        Log.d(LOG_TAG,"Service is created.......")
 
         try {
             val songList = PlayerConstants.SONG_LIST
@@ -132,28 +146,37 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
 
             if (songIndex != -1 && songIndex < songList?.size ?: 0) {
                 activeSong = songList?.get(songIndex)
-            } else {
-                stopSelf()
             }
+
+            initMediaPlayer()
+
+            PlayerConstants.SONG_CHANGE_HANDLER = Handler(Handler.Callback { msg ->
+                activeSong = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)
+                initMediaPlayer()
+                updateUiOnMediaAction?.invoke()
+                return@Callback false
+            })
+
+            PlayerConstants.PLAY_PAUSE_HANDLER = Handler(Handler.Callback { msg ->
+                val message = msg.obj as String
+                if (mMediaPlayer == null)
+                    return@Callback false
+
+                if (message.equals(getString(R.string.play),true)) {
+                    PlayerConstants.SONG_PAUSED = false
+                    playMedia()
+                } else if (message.equals(getString(R.string.pause),true)) {
+                    PlayerConstants.SONG_PAUSED = true
+                    pauseMedia()
+                }
+                buildNotification()
+                updateUiOnMediaAction?.invoke()
+                return@Callback false
+            })
 
         } catch (ex: NullPointerException) {
             stopSelf()
         }
-
-//        PlayerConstants.SONG_LIST_UPDATE_HANDLER = Handler(Handler.Callback {
-//            return@Callback true
-//        })
-
-//        if (mediaSessionManager == null) {
-            try {
-//                initMediaSession()
-                initMediaPlayer()
-            } catch (e: RemoteException) {
-                e.printStackTrace()
-                stopSelf()
-            }
-//        }
-
         return START_STICKY
     }
 
@@ -163,9 +186,6 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     }
 
     private fun initMediaPlayer() {
-        mMediaPlayer?.setOnCompletionListener(this)
-        mMediaPlayer?.setOnPreparedListener(this)
-
         if (mMediaPlayer?.isPlaying == true) {
             PlayerConstants.SONG_PAUSED = true
             mMediaPlayer?.stop()
@@ -206,27 +226,28 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     }
 
     private fun requestAudioFocus(): Boolean {
-        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            audioManager?.requestAudioFocus(createAudioRequestFocus())
-        } else {
-            audioManager?.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-        }
+//        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+//        val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            audioManager?.requestAudioFocus(createAudioRequestFocus())
+//        } else {
+//            audioManager?.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+//        }
 
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            return true
-        }
+//        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+//            return true
+//        }
         return false
     }
 
     private fun removeAudioFocus(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
-                    audioManager?.abandonAudioFocusRequest(createAudioRequestFocus())
-        } else {
-            AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
-                    audioManager?.abandonAudioFocus(this)
-        }
+//        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
+//                    audioManager?.abandonAudioFocusRequest(createAudioRequestFocus())
+//        } else {
+//            AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
+//                    audioManager?.abandonAudioFocus(this)
+//        }
+        return false
     }
 
     @TargetApi(Build.VERSION_CODES.O)
@@ -250,7 +271,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
 
             else ->
                 // no repeat or shuffle ON - play next song
-                nextMedia()
+                Controls.nextControl(this)
         }
     }
 
@@ -283,38 +304,8 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     override fun stopMedia() {
         if (mMediaPlayer?.isPlaying == true) {
             mMediaPlayer?.stop()
+            timer?.cancel()
         }
-    }
-
-    override fun nextMedia() {
-        if (PlayerConstants.SONG_NUMBER == PlayerConstants.SONG_LIST?.size?.minus(1)) {
-            //if last in playlist
-            PlayerConstants.SONG_NUMBER = 0
-            activeSong = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)
-        } else {
-            //get next song
-            activeSong = PlayerConstants.SONG_LIST?.get(++PlayerConstants.SONG_NUMBER)
-        }
-
-        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(PlayerConstants.SONG_NUMBER)
-
-        initMediaPlayer()
-    }
-
-    override fun prevMedia() {
-        if (PlayerConstants.SONG_NUMBER == 0) {
-            //if first in playlist
-            //set index to the last of audioList
-            PlayerConstants.SONG_NUMBER = PlayerConstants.SONG_LIST?.size?.minus(1)?:0
-            activeSong = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)
-        } else {
-            //get previous in playlist
-            activeSong = PlayerConstants.SONG_LIST?.get(--PlayerConstants.SONG_NUMBER)
-        }
-
-        SpUtility.getInstance(applicationContext)?.setCurrentSongIndex(PlayerConstants.SONG_NUMBER)
-
-        initMediaPlayer()
     }
 
     override fun shuffleMedia() {
@@ -362,37 +353,37 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
                 initMediaPlayer()
             }
 
-            playerAction?.equals(MusicPlayerActivity.ACTION_PLAY, true) == true -> {
-                playMedia()
-                buildNotification()
-                updateUiOnMediaAction?.invoke()
-            }
-
-            playerAction?.equals(MusicPlayerActivity.ACTION_PAUSE, true) == true -> {
-                pauseMedia()
-                buildNotification()
-                updateUiOnMediaAction?.invoke()
-            }
-
-            playerAction?.equals(MusicPlayerActivity.ACTION_NEXT, true) == true -> {
-                nextMedia()
-                updateUiOnMediaAction?.invoke()
-            }
-
-            playerAction?.equals(MusicPlayerActivity.ACTION_PREV, true) == true -> {
-                prevMedia()
-                updateUiOnMediaAction?.invoke()
-            }
+//            playerAction?.equals(MusicPlayerActivity.ACTION_PLAY, true) == true -> {
+//                playMedia()
+//                buildNotification()
+//                updateUiOnMediaAction?.invoke()
+//            }
+//
+//            playerAction?.equals(MusicPlayerActivity.ACTION_PAUSE, true) == true -> {
+//                pauseMedia()
+//                buildNotification()
+//                updateUiOnMediaAction?.invoke()
+//            }
+//
+//            playerAction?.equals(MusicPlayerActivity.ACTION_NEXT, true) == true -> {
+//                nextMedia()
+//                updateUiOnMediaAction?.invoke()
+//            }
+//
+//            playerAction?.equals(MusicPlayerActivity.ACTION_PREV, true) == true -> {
+//                prevMedia()
+//                updateUiOnMediaAction?.invoke()
+//            }
         }
     }
 
     private fun registerPlayerControlsBroadCastReceiver() {
         val intentFilter = IntentFilter()
         intentFilter.addAction(MusicPlayerActivity.ACTION_PLAY_NEW_AUDIO)
-        intentFilter.addAction(MusicPlayerActivity.ACTION_PLAY)
-        intentFilter.addAction(MusicPlayerActivity.ACTION_PAUSE)
-        intentFilter.addAction(MusicPlayerActivity.ACTION_NEXT)
-        intentFilter.addAction(MusicPlayerActivity.ACTION_PREV)
+//        intentFilter.addAction(MusicPlayerActivity.ACTION_PLAY)
+//        intentFilter.addAction(MusicPlayerActivity.ACTION_PAUSE)
+//        intentFilter.addAction(MusicPlayerActivity.ACTION_NEXT)
+//        intentFilter.addAction(MusicPlayerActivity.ACTION_PREV)
         registerReceiver(playerControlBroadcastReceiver, intentFilter)
     }
 
@@ -407,11 +398,10 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
                 when (keyEvent.keyCode) {
                     KeyEvent.KEYCODE_HEADSETHOOK, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
                         if (!PlayerConstants.SONG_PAUSED) {
-                            pauseMedia()
+                            Controls.pauseControl(this@MusicService)
                         } else {
-                            playMedia()
+                            Controls.playControl(this@MusicService)
                         }
-                        buildNotification()
                     }
                     KeyEvent.KEYCODE_MEDIA_PLAY -> {
                     }
@@ -421,34 +411,26 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
                     }
                     KeyEvent.KEYCODE_MEDIA_NEXT -> {
                         Log.d("TAG", "TAG: KEYCODE_MEDIA_NEXT")
-                        nextMedia()
-                        buildNotification()
+                        Controls.nextControl(this@MusicService)
                     }
                     KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
                         Log.d("TAG", "TAG: KEYCODE_MEDIA_PREVIOUS")
-                        nextMedia()
-                        buildNotification()
+                        Controls.previousControl(this@MusicService)
                     }
                 }
             } else {
                 when {
                     intent?.action.equals(NOTIFY_PLAY, true) -> {
-                        playMedia()
-                        buildNotification()
-                        notificationControl?.invoke(NOTIFY_PLAY)
+                        Controls.playControl(this@MusicService)
                     }
                     intent?.action.equals(NOTIFY_PAUSE, true) -> {
-                        pauseMedia()
-                        buildNotification()
-                        notificationControl?.invoke(NOTIFY_PAUSE)
+                        Controls.pauseControl(this@MusicService)
                     }
                     intent?.action.equals(NOTIFY_NEXT, true) -> {
-                        nextMedia()
-                        notificationControl?.invoke(NOTIFY_NEXT)
+                        Controls.nextControl(this@MusicService)
                     }
                     intent?.action.equals(NOTIFY_PREV, true) -> {
-                        prevMedia()
-                        notificationControl?.invoke(NOTIFY_PREV)
+                        Controls.previousControl(this@MusicService)
                     }
                 }
             }
@@ -458,8 +440,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
     private val becomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             //pause audio on ACTION_AUDIO_BECOMING_NOISY
-            pauseMedia()
-            buildNotification()
+
         }
     }
 
@@ -470,39 +451,39 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
 
     private fun callStateListener() {
         // Get the telephony manager
-        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-
-        //Starting listening for PhoneState changes
-        phoneStateListener = object : PhoneStateListener() {
-            override fun onCallStateChanged(state: Int, phoneNumber: String?) {
-                when (state) {
-                    //if at least one call exists or the phone is ringing
-                    //pause the MediaPlayer
-                    TelephonyManager.CALL_STATE_OFFHOOK -> {
-                    }
-                    TelephonyManager.CALL_STATE_RINGING -> {
-                        if (mMediaPlayer != null) {
-                            pauseMedia()
-                            ongoingCall = true
-                        }
-                    }
-                    TelephonyManager.CALL_STATE_IDLE -> {
-                        // Phone idle. Start playing.
-                        if (mMediaPlayer != null) {
-                            if (ongoingCall) {
-                                ongoingCall = false
-                                playMedia()
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//        telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+//
+//        //Starting listening for PhoneState changes
+//        phoneStateListener = object : PhoneStateListener() {
+//            override fun onCallStateChanged(state: Int, phoneNumber: String?) {
+//                when (state) {
+//                    //if at least one call exists or the phone is ringing
+//                    //pause the MediaPlayer
+//                    TelephonyManager.CALL_STATE_OFFHOOK -> {
+//                    }
+//                    TelephonyManager.CALL_STATE_RINGING -> {
+//                        if (mMediaPlayer != null) {
+//                            pauseMedia()
+//                            ongoingCall = true
+//                        }
+//                    }
+//                    TelephonyManager.CALL_STATE_IDLE -> {
+//                        // Phone idle. Start playing.
+//                        if (mMediaPlayer != null) {
+//                            if (ongoingCall) {
+//                                ongoingCall = false
+//                                playMedia()
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         // Register the listener with the telephony manager
         // Listen for changes to the device call state.
-        telephonyManager?.listen(phoneStateListener,
-                PhoneStateListener.LISTEN_CALL_STATE)
+//        telephonyManager?.listen(phoneStateListener,
+//                PhoneStateListener.LISTEN_CALL_STATE)
     }
 
     private fun registerNotificationBroadcastReceiver() {
@@ -514,114 +495,43 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         registerReceiver(notificationBroadcastReceiver, intentFilter)
     }
 
-    fun buildNotification() {
+    private fun buildNotification() {
         val songTitle = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songTitle
         val songArtist = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.songArtist
         val albumName = PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.album
 
-        val smallNotificationView = RemoteViews(applicationContext.packageName, R.layout.music_player_notification)
-        val expandedNotificationView = RemoteViews(applicationContext.packageName, R.layout.music_player_notification_expanded)
+        val notificationCompat = NotifyUtils.getNotification(this, CHANNEL_ID)
 
-        val notificationCompat = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-        } else {
-            NotificationCompat.Builder(applicationContext)
+        PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.albumId?.let {
+            val bitmap = Utilities.getAlbumart(this,it)
+
+            notificationCompat.contentView?.setImageViewBitmap(R.id.status_bar_album_art,
+                    bitmap)
+
+            notificationCompat.bigContentView?.setImageViewBitmap(R.id.status_bar_album_art,
+                    bitmap)
+
         }
-
-        notificationCompat.setSmallIcon(R.drawable.music)
-
-        attachPendingIntent(smallNotificationView)
-        attachPendingIntent(expandedNotificationView)
-
-        PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.albumArtByteArray?.let { bytes ->
-            notificationCompat.contentView.setImageViewBitmap(R.id.status_bar_album_art,
-                    Utilities.getBitmapFromByteArray(bytes))
-
-            notificationCompat.contentView.setImageViewBitmap(R.id.ll_notification,
-                    Utilities.getBitmapFromByteArray(bytes))
-
-            notificationCompat.bigContentView.setImageViewBitmap(R.id.status_bar_album_art,
-                    Utilities.getBitmapFromByteArray(bytes))
-
-            notificationCompat.bigContentView.setImageViewBitmap(R.id.ll_notification,
-                    Utilities.getBitmapFromByteArray(bytes))
-        }
-
-        notificationCompat.setCustomContentView(smallNotificationView)
-        notificationCompat.setCustomBigContentView(expandedNotificationView)
 
         if (mMediaPlayer?.isPlaying == true) {
-            notificationCompat.contentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause)
-            notificationCompat.bigContentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause)
+            notificationCompat.contentView?.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause)
+            notificationCompat.bigContentView?.setImageViewResource(R.id.status_bar_play, R.drawable.ic_pause)
         } else {
-            notificationCompat.contentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play)
-            notificationCompat.bigContentView.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play)
+            notificationCompat.contentView?.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play)
+            notificationCompat.bigContentView?.setImageViewResource(R.id.status_bar_play, R.drawable.ic_play)
         }
 
-        notificationCompat.contentView.setTextViewText(R.id.status_bar_track_name, songTitle)
-        notificationCompat.bigContentView.setTextViewText(R.id.status_bar_track_name, songTitle)
+        notificationCompat.contentView?.setTextViewText(R.id.status_bar_track_name, songTitle)
+        notificationCompat.bigContentView?.setTextViewText(R.id.status_bar_track_name, songTitle)
 
-        notificationCompat.contentView.setTextViewText(R.id.status_bar_artist_name, songArtist)
-        notificationCompat.bigContentView.setTextViewText(R.id.status_bar_artist_name, songArtist)
+        notificationCompat.contentView?.setTextViewText(R.id.status_bar_artist_name, songArtist)
+        notificationCompat.bigContentView?.setTextViewText(R.id.status_bar_artist_name, songArtist)
 
-        notificationCompat.bigContentView.setTextViewText(R.id.status_bar_album_name, albumName)
-
-        //set pending Intent for Notification on Click event
-        val launchIntent = Intent(applicationContext, MusicPlayerActivity::class.java)
-        launchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-
-        val pLaunchIntent = PendingIntent.getActivity(applicationContext, 0, launchIntent, 0)
-        notificationCompat.setContentIntent(pLaunchIntent)
-
-        notificationCompat.setOngoing(true)
+        notificationCompat.bigContentView?.setTextViewText(R.id.status_bar_album_name, albumName)
 
         val notification = notificationCompat.build()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createChannel()
-        }
-
-        getManager()?.notify(NOTIFICATION_ID, notification)
-    }
-
-    @TargetApi(Build.VERSION_CODES.O)
-    private fun createChannel(): NotificationChannel {
-        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
-        channel.enableLights(false)
-        channel.enableVibration(false)
-        channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-        return channel
-    }
-
-    private fun getManager(): NotificationManager? {
-        if (notificationManager == null) {
-            notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        }
-        return notificationManager
-    }
-
-    private fun attachPendingIntent(remoteView: RemoteViews) {
-        val playIntent = Intent(NOTIFY_PLAY)
-        val pauseIntent = Intent(NOTIFY_PAUSE)
-        val prevIntent = Intent(NOTIFY_PREV)
-        val nextIntent = Intent(NOTIFY_NEXT)
-
-        val pPlay = PendingIntent.getBroadcast(applicationContext, 0,
-                playIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        remoteView.setOnClickPendingIntent(R.id.status_bar_play, pPlay)
-
-        val pPause = PendingIntent.getBroadcast(applicationContext, 0,
-                pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        remoteView.setOnClickPendingIntent(R.id.status_bar_play, pPause)
-
-        val pNext = PendingIntent.getBroadcast(applicationContext, 0,
-                nextIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        remoteView.setOnClickPendingIntent(R.id.status_bar_next, pNext)
-
-        val pPrevious = PendingIntent.getBroadcast(applicationContext, 0,
-                prevIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        remoteView.setOnClickPendingIntent(R.id.status_bar_prev, pPrevious)
-
+        NotifyUtils.notify(NOTIFICATION_ID, notification)
     }
 
     override fun onDestroy() {
@@ -639,8 +549,8 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
 //            telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
 //        }
 
-        //unregister Noisy BroadcastReceivers
-        unregisterReceiver(becomingNoisyReceiver)
+//        //unregister Noisy BroadcastReceivers
+//        unregisterReceiver(becomingNoisyReceiver)
 
         //unregister player control broadcast receiver
         unregisterReceiver(playerControlBroadcastReceiver)
@@ -648,7 +558,8 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.On
         //unregister notification control broadcast receiver
         unregisterReceiver(notificationBroadcastReceiver)
 
-        getManager()?.cancel(NOTIFICATION_ID)
+
+        NotifyUtils.cancelNotification(NOTIFICATION_ID)
         SpUtility.getInstance(applicationContext)?.clearSharedPreference()
         super.onDestroy()
     }

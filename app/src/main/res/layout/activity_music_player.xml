@@ -80,7 +80,6 @@
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <LinearLayout
-        android:id="@+id/dragView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ffffff"
@@ -88,7 +87,7 @@
         android:orientation="vertical">
 
         <RelativeLayout
-            android:id="@+id/relativeSlidingLayout"
+            android:id="@+id/dragView"
             android:layout_width="match_parent"
             android:layout_height="68dp"
             android:layout_margin="5dp">

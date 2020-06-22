@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.mahipal.musicplayer.R
 import com.mahipal.musicplayer.constants.PlayerConstants
 import com.mahipal.musicplayer.model.Song
@@ -32,10 +33,10 @@ class PlaylistQueueAdapter(private var list:ArrayList<Song>?): RecyclerView.Adap
         holder.bindItem(list?.get(position))
 
         holder.itemView.iv_drag_drop_song?.setOnTouchListener { view, motionEvent ->
-            if (motionEvent.actionMasked == MotionEvent.ACTION_DOWN) {
+            if (motionEvent.actionMasked == MotionEvent.ACTION_DOWN || motionEvent.actionMasked == MotionEvent.ACTION_UP) {
                 onTouchStartDragging?.invoke(holder)
             }
-            return@setOnTouchListener false
+            return@setOnTouchListener true
         }
     }
 
@@ -59,8 +60,10 @@ class PlaylistQueueAdapter(private var list:ArrayList<Song>?): RecyclerView.Adap
 
         @SuppressLint("SetTextI18n")
         fun bindItem(song: Song?) {
-            song?.albumArtByteArray?.let {
-                itemView.iv_playlist_album_art.setImageBitmap(Utilities.getBitmapFromByteArray(it))
+            song?.albumId?.let {
+                Glide.with(itemView.context)
+                        .load(Utilities.getAlbumart(itemView.context,it))
+                        .into(itemView.iv_playlist_album_art)
             }?: itemView.iv_playlist_album_art.setImageResource(R.drawable.music)
 
             song?.songTitle?.let {

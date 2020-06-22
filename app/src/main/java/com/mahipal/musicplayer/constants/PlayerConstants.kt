@@ -7,14 +7,15 @@ object PlayerConstants {
 
     var SONG_LIST : ArrayList<Song>? = null
 
-    //song number which is playing right now from SONGS_LIST
     var SONG_NUMBER = -1
 
-    //song is playing or paused
     var SONG_PAUSED = true
 
-    //handler for showing song progress defined in Activities(MusicPlayerActivity, AudioPlayerActivity)
     var PROGRESSBAR_HANDLER: Handler? = null
+
+    var SONG_CHANGE_HANDLER: Handler? = null
+
+    var PLAY_PAUSE_HANDLER: Handler? = null
 
     var isShuffle = false
 

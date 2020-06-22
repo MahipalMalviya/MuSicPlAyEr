@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.provider.MediaStore
+import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 import android.widget.ImageView
 import android.widget.TextView
@@ -14,6 +15,10 @@ import com.bumptech.glide.Glide
 import com.mahipal.musicplayer.R
 import com.mahipal.musicplayer.model.Song
 import java.util.ArrayList
+import android.content.ContentUris
+import android.net.Uri
+import java.io.FileDescriptor
+
 
 /**
  * Created by MAHIPAL-PC on 15-12-2017.
@@ -21,9 +26,9 @@ import java.util.ArrayList
 
 object Utilities {
 
-    fun getMp3Songs(context: Context): ArrayList<Song> {
+    private val TAG = Utilities::class.java.simpleName
 
-        var albumArtByteArray: ByteArray? = null
+    fun getMp3Songs(context: Context): ArrayList<Song> {
 
         val arrayList = ArrayList<Song>()
 
@@ -41,17 +46,20 @@ object Utilities {
                 do {
                     val songId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
                     val artistName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
-
+                    val albumId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
                     val fullPath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA))
 
                     val metadataRetriever = MediaMetadataRetriever()
                     metadataRetriever.setDataSource(fullPath)
 
-                    try {
-                        albumArtByteArray = metadataRetriever.embeddedPicture
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+//                    try {
+//                        val albumArtByteArray = metadataRetriever.embeddedPicture
+//                        albumArtByteArray?.let {
+//                            albumArt = BitmapFactory.decodeByteArray(it,0,it.size)
+//                        }
+//                    } catch (e: Exception) {
+//                        e.printStackTrace()
+//                    }
 
                     val songTime = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
 
@@ -71,7 +79,8 @@ object Utilities {
                     val ext = songName.substring(songName.lastIndexOf(".") + 1)
 
                     if (ext == "mp3" || ext == "MP3") {
-                        val song = Song(songId, songName, artistName, fullPath, minutes, seconds, "", albumArtByteArray)
+                        val song = Song(songId, songName, artistName, fullPath, minutes, seconds, "", albumId)
+                        Log.d(TAG,"mp3 songs ---> $song")
                         arrayList.add(song)
                     }
 
@@ -80,6 +89,24 @@ object Utilities {
             }
         }
         return arrayList
+    }
+
+    fun getAlbumart(context: Context, album_id: Long?): Bitmap? {
+        var bm: Bitmap? = null
+        val options = BitmapFactory.Options()
+        try {
+            val sArtworkUri = Uri.parse("content://media/external/audio/albumart")
+            val uri = album_id?.let { ContentUris.withAppendedId(sArtworkUri, it) }
+            val pfd = uri?.let { context.contentResolver.openFileDescriptor(it, "r") }
+            if (pfd != null) {
+                val fd: FileDescriptor? = pfd.fileDescriptor
+                bm = BitmapFactory.decodeFileDescriptor(fd, null, options)
+            }
+        } catch (ee: Error) {
+        } catch (e: Exception) {
+        }
+
+        return bm
     }
 
     fun milliSecondsToTimer(milliseconds: Long): String {
@@ -152,11 +179,12 @@ object Utilities {
         return null
     }
 
-    fun setImageByByteArray(context: Context, byteArray: ByteArray?,imageView: ImageView?) {
-        byteArray?.let {
+    fun setImageByByteArray(context: Context, albumId: Long?,imageView: ImageView?) {
+        albumId?.let {
             imageView?.let {
+                val bitmap = getAlbumart(context,albumId)
                 Glide.with(context)
-                        .load(byteArray)
+                        .load(bitmap)
                         .into(imageView)
             }
         }

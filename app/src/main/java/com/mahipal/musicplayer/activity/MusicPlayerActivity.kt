@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.media.MediaPlayer
 import android.os.*
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -24,6 +25,7 @@ import com.mahipal.musicplayer.exception.DefaultExceptionHandler
 import com.mahipal.musicplayer.listeners.OnSwipeTouchListener
 import com.mahipal.musicplayer.model.Song
 import com.mahipal.musicplayer.service.MusicService
+import com.mahipal.musicplayer.utils.Controls
 import com.mahipal.musicplayer.utils.SpUtility
 import com.mahipal.musicplayer.utils.Utilities
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener
@@ -35,7 +37,7 @@ import kotlinx.coroutines.*
 class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnCompletionListener,
         SeekBar.OnSeekBarChangeListener {
 
-    private var serviceBound = false
+    private var TAG = MusicPlayerActivity::class.java.simpleName
 
     private var musicService: MusicService? = null
     private var isPlaylistQueueVisible = false
@@ -45,23 +47,10 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
     companion object {
         const val ACTION_PLAY_NEW_AUDIO = "com.mahipal.mediaplayer.action.playNewAudio"
-        const val ACTION_PLAY = "com.mahipal.mediaplayer.action.play"
-        const val ACTION_PAUSE = "com.mahipal.mediaplayer.action.pause"
-        const val ACTION_NEXT = "com.mahipal.mediaplayer.action.next"
-        const val ACTION_PREV = "com.mahipal.mediaplayer.action.previous"
-    }
-
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(componentName: ComponentName?, service: IBinder?) {
-            val binder = service as MusicService.LocalBinder
-            musicService = binder.service
-            serviceBound = true
-        }
-
-        override fun onServiceDisconnected(componentName: ComponentName?) {
-            musicService = null
-            serviceBound = false
-        }
+//        const val ACTION_PLAY = "com.mahipal.mediaplayer.action.play"
+//        const val ACTION_PAUSE = "com.mahipal.mediaplayer.action.pause"
+//        const val ACTION_NEXT = "com.mahipal.mediaplayer.action.next"
+//        const val ACTION_PREV = "com.mahipal.mediaplayer.action.previous"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,19 +103,11 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
             override fun onPanelSlide(panel: View, slideOffset: Float) {
 
                 if (slideOffset > 0.88) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent,theme))
-                    } else {
-                        relative?.setBackgroundColor(resources.getColor(R.color.whiteTransparent))
-                    }
                     iv_playlist?.visibility = View.VISIBLE
                     imgBtn_play?.visibility = View.GONE
-                    img_play_song?.scaleType = ImageView.ScaleType.CENTER_CROP
                 } else if (slideOffset < 0.09) {
                     iv_playlist?.visibility = View.GONE
                     imgBtn_play?.visibility = View.VISIBLE
-                    img_play_song?.setImageResource(R.drawable.music)
-//                        window.statusBarColor = resources.getColor(R.color.colorPrimaryDark,theme)
                 }
             }
 
@@ -159,28 +140,22 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
             img_play_song?.setOnTouchListener(object :OnSwipeTouchListener(this@MusicPlayerActivity){
                 override fun onSwipeLeft() {
-                    val intent = Intent(ACTION_NEXT)
-                    sendBroadcast(intent)
+                    Controls.nextControl(this@MusicPlayerActivity)
                 }
 
                 override fun onSwipeRight() {
-                    val intent = Intent(ACTION_PREV)
-                    sendBroadcast(intent)
+                    Controls.previousControl(this@MusicPlayerActivity)
                 }
             })
 
-            relativeSlidingLayout?.setOnTouchListener(object : OnSwipeTouchListener(this@MusicPlayerActivity) {
+            dragView?.setOnTouchListener(object : OnSwipeTouchListener(this@MusicPlayerActivity) {
                 override fun onSwipeLeft() {
-                    val intent = Intent(ACTION_NEXT)
-                    sendBroadcast(intent)
+                    Controls.nextControl(this@MusicPlayerActivity)
                 }
 
                 override fun onSwipeRight() {
-                    val intent = Intent(ACTION_PREV)
-                    sendBroadcast(intent)
+                    Controls.previousControl(this@MusicPlayerActivity)
                 }
-
-
             })
 
             iv_playlist?.setOnClickListener(this)
@@ -200,26 +175,18 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
         when (v.id) {
 
             R.id.imgBtn_play -> {
-                val intent = Intent(ACTION_PLAY)
-                sendBroadcast(intent)
+                Controls.playControl(this)
             }
 
             R.id.btn_song_play -> {
-                val intent = Intent(ACTION_PAUSE)
-                sendBroadcast(intent)
+                Controls.playControl(this)
             }
 
             R.id.btn_song_next -> {
-                val intent = Intent(ACTION_NEXT)
-                sendBroadcast(intent)
-
-//                updateUiControls()
+                Controls.nextControl(this)
             }
             R.id.btn_song_previous -> {
-                val intent = Intent(ACTION_PREV)
-                sendBroadcast(intent)
-
-//                updateUiControls()
+                Controls.previousControl(this)
             }
             R.id.iv_playlist -> {
                 if (!isPlaylistQueueVisible) {
@@ -335,12 +302,38 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
     override fun onStopTrackingTouch(seekBar: SeekBar) {
 
-        MusicService.mMediaPlayer?.let { player ->
-            val totalDuration = player.duration
-            val currentPosition = Utilities.progressToTimer(seekBar.progress, totalDuration)
 
-            // forward or backward to certain seconds
-            player.seekTo(currentPosition)
+//        MusicService.mMediaPlayer?.let { player ->
+//            val totalDuration = player.duration
+//            val currentPosition = Utilities.progressToTimer(seekBar.progress, totalDuration)
+//
+//            // forward or backward to certain seconds
+//            player.seekTo(currentPosition)
+//        }
+    }
+
+    private fun updateProgressBar() {
+        try {
+            PlayerConstants.PROGRESSBAR_HANDLER = Handler(Handler.Callback { message ->
+                runOnUiThread {
+                    val longArray = message.obj as LongArray
+
+                    val currentDuration = longArray[0]
+                    val totalDuration = longArray[1]
+                    // Displaying Total Duration time
+                    txt_song_TotalTime?.text = "" + Utilities.milliSecondsToTimer(totalDuration)
+                    // Displaying time completed playing
+                    txt_song_Curr_Time?.text = "" + Utilities.milliSecondsToTimer(currentDuration)
+
+                    // Updating progress bar
+                    val progress = Utilities.getProgressPercentage(currentDuration, totalDuration)
+
+                    seekBar_play_song?.progress = progress
+                }
+                return@Callback false
+            })
+        } catch (ex:Exception) {
+            ex.printStackTrace()
         }
     }
 
@@ -348,38 +341,8 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
     override fun onResume() {
         super.onResume()
 
-        try {
-            updateUiControls()
-            PlayerConstants.PROGRESSBAR_HANDLER = Handler(Handler.Callback { message ->
-                val longArray = message.obj as LongArray
-
-                val currentDuration = longArray[0]
-                val totalDuration = longArray[1]
-                // Displaying Total Duration time
-                txt_song_TotalTime?.text = "" + Utilities.milliSecondsToTimer(totalDuration)
-                // Displaying time completed playing
-                txt_song_Curr_Time?.text = "" + Utilities.milliSecondsToTimer(currentDuration)
-
-                // Updating progress bar
-                val progress = Utilities.getProgressPercentage(currentDuration, totalDuration)
-
-                seekBar_play_song?.progress = progress
-                return@Callback false
-            })
-
-        } catch (ex: Exception) {
-        }
-
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean("ServiceState", serviceBound)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        serviceBound = savedInstanceState.getBoolean("ServiceState")
+        updateUiControls()
+        updateProgressBar()
     }
 
     private fun updateUiControls() {
@@ -415,14 +378,13 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
     }
 
     private fun changeMusicAlbumArt(imageView: ImageView) {
-        Utilities.setImageByByteArray(this, PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.albumArtByteArray,
+        if (PlayerConstants.SONG_NUMBER != -1)
+            return
+        Utilities.setImageByByteArray(this, PlayerConstants.SONG_LIST?.get(PlayerConstants.SONG_NUMBER)?.albumId,
                 imageView)
     }
 
     override fun onDestroy() {
-        if (serviceBound) {
-            unbindService(serviceConnection)
-        }
         if (PlayerConstants.SONG_PAUSED) {
 
             stopService(Intent(this, MusicService::class.java))
@@ -432,13 +394,18 @@ class MusicPlayerActivity : AppCompatActivity(), View.OnClickListener, MediaPlay
 
     private fun playAudio(songIndex: Int) {
         //Check is service is active
-        if (!serviceBound) {
+        val isServiceRunning = Utilities.isServiceRunning(MusicService::class.java.simpleName,this)
+
+        if (!isServiceRunning) {
 
             SpUtility.getInstance(this)?.setCurrentSongIndex(songIndex)
 
             val playerIntent = Intent(this, MusicService::class.java)
-            startService(playerIntent)
-            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(playerIntent)
+            } else {
+                startService(playerIntent)
+            }
         } else {
             //Store the new songIndex to SharedPreferences
             SpUtility.getInstance(this)?.setCurrentSongIndex(songIndex)
